@@ -499,8 +499,113 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.18);
     cursor: pointer;
     padding: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .color-dot.active { transform: scale(1.18); box-shadow: 0 0 0 3px #0f172a; }
+
+  /* Stationery Wheel & Sub-Color Picker */
+  .stationery-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .wheel-trigger-btn {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.75);
+    color: #0f172a;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    transition: all 0.18s ease;
+  }
+  .wheel-trigger-btn.has-tool {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+  }
+  .color-subbar {
+    display: none;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.68);
+    border: 1px solid rgba(255,255,255,0.88);
+    animation: liquidPop 0.22s ease;
+  }
+  .color-subbar.open { display: inline-flex; }
+  .stationery-wheel {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 178px;
+    height: 178px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.24), inset 0 1px 2px rgba(255,255,255,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    animation: liquidPop 0.22s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .stationery-wheel.open { display: flex; }
+  .wheel-center {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(241, 245, 249, 0.95);
+    border: 1.5px solid #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+  .wheel-item {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.95);
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 17px;
+    line-height: 1;
+    transition: transform 0.16s ease, background 0.16s ease;
+  }
+  .wheel-item span {
+    font-size: 10px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .wheel-item:hover { transform: scale(1.12); }
+  .wheel-item.active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.3);
+  }
 
   .step-dots { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #334155; }
   .s-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(148,163,184,0.5); }
@@ -1091,17 +1196,31 @@
   <!-- BOTTOM FLOATING LIQUID GLASS DOCK -->
   <footer class="glass-dock">
     <div class="tool-group">
-      <button class="tool-btn active" id="tool-cursor">👆 點按</button>
-      <button class="tool-btn" id="tool-pen" title="按住終點 2 秒自動變直線">✏️ 畫筆</button>
-      <button class="tool-btn" id="tool-hl" title="按住終點 2 秒自動變直線">🖍️ 螢光筆</button>
-      <button class="tool-btn" id="tool-eraser">🧽 橡皮擦</button>
-      <button class="tool-btn" id="tool-laser" title="指出重點後筆跡自動漸隱消失">🔴 鐳射筆</button>
-      <button class="color-dot active" data-color="#ef4444" style="background:#ef4444;"></button>
-      <button class="color-dot" data-color="#2563eb" style="background:#2563eb;"></button>
-      <button class="color-dot" data-color="#16a34a" style="background:#16a34a;"></button>
-      <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></button>
-      <button class="tool-btn" id="tool-undo">↩️</button>
-      <button class="tool-btn" id="tool-clear">🗑️</button>
+      <div class="stationery-wrap" id="stationery-wrap">
+        <button class="wheel-trigger-btn" id="btn-wheel-toggle" title="開啟文具輪盤">
+          <span id="cur-tool-icon">👆</span>
+          <span id="cur-tool-label">點按</span>
+          <span style="font-size:10px; opacity:0.75;">▲</span>
+        </button>
+
+        <div class="stationery-wheel" id="stationery-wheel">
+          <button class="wheel-item active" data-tool="cursor" style="transform: translate(0px, -60px);">👆<span>點按</span></button>
+          <button class="wheel-item" data-tool="pen" style="transform: translate(57px, -19px);">✏️<span>畫筆</span></button>
+          <button class="wheel-item" data-tool="hl" style="transform: translate(35px, 49px);">🖍️<span>螢光筆</span></button>
+          <button class="wheel-item" data-tool="laser" style="transform: translate(-35px, 49px);">🔴<span>鐳射筆</span></button>
+          <button class="wheel-item" data-tool="eraser" style="transform: translate(-57px, -19px);">🧽<span>橡皮擦</span></button>
+          <div class="wheel-center" id="btn-wheel-close">選擇<br>文具</div>
+        </div>
+
+        <div class="color-subbar" id="color-subbar">
+          <button class="color-dot active" data-color="#ef4444" style="background:#ef4444;"></button>
+          <button class="color-dot" data-color="#2563eb" style="background:#2563eb;"></button>
+          <button class="color-dot" data-color="#16a34a" style="background:#16a34a;"></button>
+          <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></button>
+        </div>
+      </div>
+      <button class="tool-btn" id="tool-undo" title="復原上一筆">↩️</button>
+      <button class="tool-btn" id="tool-clear" title="清除本頁筆跡">🗑️</button>
     </div>
 
     <div class="step-dots" id="step-indicator">
@@ -1755,18 +1874,53 @@
   canvas.addEventListener("pointerup", stopDraw);
   canvas.addEventListener("pointercancel", stopDraw);
 
+  const TOOL_META = {
+    cursor: { icon: "👆", label: "點按", hasColor: false },
+    pen:    { icon: "✏️", label: "畫筆", hasColor: true },
+    hl:     { icon: "🖍️", label: "螢光筆", hasColor: true },
+    laser:  { icon: "🔴", label: "鐳射筆", hasColor: false },
+    eraser: { icon: "🧽", label: "橡皮擦", hasColor: false }
+  };
+  const wheelEl = document.getElementById("stationery-wheel");
+  const wheelToggleBtn = document.getElementById("btn-wheel-toggle");
+  const colorSubbar = document.getElementById("color-subbar");
+
   function setTool(t) {
     tool = t;
-    ["cursor", "pen", "hl", "eraser", "laser"].forEach(k => document.getElementById(`tool-${k}`).classList.toggle("active", k === t));
+    const meta = TOOL_META[t] || TOOL_META.cursor;
+    document.getElementById("cur-tool-icon").textContent = meta.icon;
+    document.getElementById("cur-tool-label").textContent = meta.label;
+    wheelToggleBtn.classList.toggle("has-tool", t !== "cursor");
+    colorSubbar.classList.toggle("open", meta.hasColor);
+    document.querySelectorAll(".wheel-item").forEach(btn => btn.classList.toggle("active", btn.dataset.tool === t));
     canvas.classList.toggle("drawing-active", t === "pen" || t === "hl" || t === "laser");
     canvas.classList.toggle("eraser-active", t === "eraser");
   }
-  ["cursor", "pen", "hl", "eraser", "laser"].forEach(k => document.getElementById(`tool-${k}`).addEventListener("click", () => setTool(k)));
+
+  wheelToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    wheelEl.classList.toggle("open");
+  });
+  document.getElementById("btn-wheel-close").addEventListener("click", (e) => {
+    e.stopPropagation();
+    wheelEl.classList.remove("open");
+  });
+  document.querySelectorAll(".wheel-item").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setTool(btn.dataset.tool);
+      wheelEl.classList.remove("open");
+    });
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (!document.getElementById("stationery-wrap").contains(e.target)) {
+      wheelEl.classList.remove("open");
+    }
+  });
   document.querySelectorAll(".color-dot").forEach(sw => {
     sw.addEventListener("click", () => {
       color = sw.dataset.color;
       document.querySelectorAll(".color-dot").forEach(x => x.classList.toggle("active", x === sw));
-      if (tool === "cursor" || tool === "eraser") setTool("pen");
     });
   });
   document.getElementById("tool-undo").addEventListener("click", () => { pageStrokes[curPage].pop(); redrawCanvas(); });
