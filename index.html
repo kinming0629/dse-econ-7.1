@@ -1095,6 +1095,7 @@
       <button class="tool-btn" id="tool-pen" title="按住終點 2 秒自動變直線">✏️ 畫筆</button>
       <button class="tool-btn" id="tool-hl" title="按住終點 2 秒自動變直線">🖍️ 螢光筆</button>
       <button class="tool-btn" id="tool-eraser">🧽 橡皮擦</button>
+      <button class="tool-btn" id="tool-laser" title="指出重點後筆跡自動漸隱消失">🔴 鐳射筆</button>
       <button class="color-dot active" data-color="#ef4444" style="background:#ef4444;"></button>
       <button class="color-dot" data-color="#2563eb" style="background:#2563eb;"></button>
       <button class="color-dot" data-color="#16a34a" style="background:#16a34a;"></button>
@@ -1625,12 +1626,25 @@
     }
   });
 
-  // Whiteboard Canvas + Eraser + 2s Straight Line
+  // Whiteboard Canvas + Eraser + 2s Straight Line + Laser Pointer
   const stage = document.getElementById("stage-wrap");
   const canvas = document.getElementById("draw-canvas");
   const ctx = canvas.getContext("2d");
   const drawToast = document.getElementById("draw-toast");
   let tool = "cursor", color = "#ef4444", drawing = false, stroke = null, holdTimer = null, anchor = null, toastT = null;
+  let laserStrokes = [], laserRaf = null;
+  const LASER_LIFE = 1100;
+
+  function tickLaser() {
+    const now = performance.now();
+    laserStrokes = laserStrokes.filter(ls => now - ls.endTime < LASER_LIFE);
+    redrawCanvas();
+    if (laserStrokes.length > 0) {
+      laserRaf = requestAnimationFrame(tickLaser);
+    } else {
+      laserRaf = null;
+    }
+  }
 
   function showToast(msg) {
     drawToast.textContent = msg; drawToast.classList.add("visible");
@@ -1664,6 +1678,38 @@
       if (st.points.length === 1) ctx.lineTo(st.points[0].x * r.width + 0.5, st.points[0].y * r.height + 0.5);
       ctx.stroke(); ctx.restore();
     }
+    const now = performance.now();
+    for (const ls of laserStrokes) {
+      if (!ls.points.length) continue;
+      const age = ls.active ? 0 : (now - ls.endTime);
+      const alpha = Math.max(0, 1 - age / LASER_LIFE);
+      if (alpha <= 0) continue;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.globalAlpha = alpha * 0.42;
+      ctx.lineWidth = 13;
+      ctx.strokeStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.moveTo(ls.points[0].x * r.width, ls.points[0].y * r.height);
+      for (let i = 1; i < ls.points.length; i++) ctx.lineTo(ls.points[i].x * r.width, ls.points[i].y * r.height);
+      if (ls.points.length === 1) ctx.lineTo(ls.points[0].x * r.width + 0.5, ls.points[0].y * r.height + 0.5);
+      ctx.stroke();
+
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#ffffff";
+      ctx.shadowColor = "#ef4444";
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+
+      const tip = ls.points[ls.points.length - 1];
+      ctx.beginPath();
+      ctx.arc(tip.x * r.width, tip.y * r.height, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.restore();
+    }
   }
   function normPt(e) {
     const r = canvas.getBoundingClientRect();
@@ -1672,6 +1718,13 @@
   canvas.addEventListener("pointerdown", (e) => {
     if (tool === "cursor") return;
     e.preventDefault(); canvas.setPointerCapture(e.pointerId); drawing = true;
+    if (tool === "laser") {
+      stroke = { points: [normPt(e)], active: true, endTime: performance.now() };
+      laserStrokes.push(stroke);
+      if (!laserRaf) laserRaf = requestAnimationFrame(tickLaser);
+      redrawCanvas();
+      return;
+    }
     stroke = { tool, color, straight: false, points: [normPt(e)] };
     pageStrokes[curPage].push(stroke); redrawCanvas();
     if (tool === "pen" || tool === "hl") startHold(e.clientX, e.clientY);
@@ -1679,12 +1732,24 @@
   canvas.addEventListener("pointermove", (e) => {
     if (!drawing || !stroke) return;
     e.preventDefault(); const pt = normPt(e);
+    if (tool === "laser") {
+      stroke.points.push(pt);
+      stroke.endTime = performance.now();
+      redrawCanvas();
+      return;
+    }
     if (stroke.straight) { stroke.points[1] = pt; redrawCanvas(); return; }
     stroke.points.push(pt); redrawCanvas();
     if ((tool === "pen" || tool === "hl") && anchor && Math.hypot(e.clientX - anchor.x, e.clientY - anchor.y) > 6) startHold(e.clientX, e.clientY);
   });
   function stopDraw(e) {
-    clearHold(); if (!drawing) return; drawing = false; stroke = null;
+    clearHold(); if (!drawing) return;
+    if (tool === "laser" && stroke) {
+      stroke.active = false;
+      stroke.endTime = performance.now();
+      if (!laserRaf) laserRaf = requestAnimationFrame(tickLaser);
+    }
+    drawing = false; stroke = null;
     if (e && canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
   }
   canvas.addEventListener("pointerup", stopDraw);
@@ -1692,11 +1757,11 @@
 
   function setTool(t) {
     tool = t;
-    ["cursor", "pen", "hl", "eraser"].forEach(k => document.getElementById(`tool-${k}`).classList.toggle("active", k === t));
-    canvas.classList.toggle("drawing-active", t === "pen" || t === "hl");
+    ["cursor", "pen", "hl", "eraser", "laser"].forEach(k => document.getElementById(`tool-${k}`).classList.toggle("active", k === t));
+    canvas.classList.toggle("drawing-active", t === "pen" || t === "hl" || t === "laser");
     canvas.classList.toggle("eraser-active", t === "eraser");
   }
-  ["cursor", "pen", "hl", "eraser"].forEach(k => document.getElementById(`tool-${k}`).addEventListener("click", () => setTool(k)));
+  ["cursor", "pen", "hl", "eraser", "laser"].forEach(k => document.getElementById(`tool-${k}`).addEventListener("click", () => setTool(k)));
   document.querySelectorAll(".color-dot").forEach(sw => {
     sw.addEventListener("click", () => {
       color = sw.dataset.color;
