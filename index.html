@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>7.1 Unit Sales Tax — Liquid Glass 互動課堂版</title>
+<style>
+  :root {
+    --glass-bg: rgba(255, 255, 255, 0.56);
+    --glass-strong: rgba(255, 255, 255, 0.78);
+    --glass-subtle: rgba(255, 255, 255, 0.36);
+    --glass-border: rgba(255, 255, 255, 0.68);
+    --glass-shadow: 0 12px 36px rgba(15, 23, 42, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+    --text: #0f172a;
+    --text-muted: #334155;
+    --primary: #2563eb;
+    --demand: #2563eb;
+    --supply0: #0d9488;
+    --supply1: #e11d48;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    user-select: none;
+    background: #dbeafe;
+  }
+
+  /* Ambient Liquid Mesh Background */
+  .liquid-canvas-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(circle at 14% 18%, rgba(96, 165, 250, 0.55) 0%, transparent 45%),
+      radial-gradient(circle at 86% 22%, rgba(45, 212, 191, 0.45) 0%, transparent 48%),
+      radial-gradient(circle at 75% 84%, rgba(251, 191, 36, 0.38) 0%, transparent 45%),
+      radial-gradient(circle at 22% 82%, rgba(167, 139, 250, 0.42) 0%, transparent 50%),
+      linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 50%, #ede9fe 100%);
+    pointer-events: none;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    padding: 8px 12px;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  /* Liquid Glass Top Pill Bar */
+  .glass-topbar {
+    height: 52px;
+    background: var(--glass-strong);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 18px;
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .brand-orb {
+    background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35), inset 0 1px 1px rgba(255,255,255,0.6);
+  }
+
+  .nav-pills {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .nav-pills::-webkit-scrollbar { display: none; }
+
+  .nav-pill {
+    border: 1px solid rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.45);
+    color: #1e293b;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-pill:hover {
+    background: rgba(255,255,255,0.85);
+    transform: translateY(-1px);
+  }
+  .nav-pill.active {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    color: #fff;
+    border-color: rgba(255,255,255,0.5);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), inset 0 1px 1px rgba(255,255,255,0.55);
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .glass-btn {
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid rgba(255,255,255,0.85);
+    color: #0f172a;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    transition: all 0.18s ease;
+  }
+  .glass-btn:hover { background: rgba(255,255,255,0.92); transform: translateY(-1px); }
+  .glass-btn.accent {
+    background: linear-gradient(135deg, rgba(37,99,235,0.9) 0%, rgba(14,165,233,0.9) 100%);
+    color: #fff;
+    border-color: rgba(255,255,255,0.55);
+  }
+
+  /* Teacher Prompt Glass Ribbon */
+  .prompt-ribbon {
+    background: linear-gradient(120deg, rgba(255,255,255,0.75) 0%, rgba(254, 249, 195, 0.72) 100%);
+    backdrop-filter: blur(20px) saturate(170%);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 18px;
+    box-shadow: var(--glass-shadow);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  body.hide-prompt .prompt-ribbon {
+    display: none;
+  }
+
+  .role-chip {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.8);
+  }
+  .role-ask { background: rgba(219, 234, 254, 0.9); color: #1e40af; }
+  .role-demo { background: rgba(252, 231, 243, 0.9); color: #9d174d; }
+  .role-try { background: rgba(254, 243, 199, 0.95); color: #92400e; }
+  .role-done { background: rgba(209, 250, 229, 0.9); color: #065f46; }
+
+  .prompt-main { font-size: 16.5px; font-weight: 800; color: #0f172a; line-height: 1.32; }
+  .prompt-sub { font-size: 13.5px; color: #334155; margin-top: 2px; }
+
+  .ws-badge {
+    background: rgba(15, 23, 42, 0.82);
+    color: #f8fafc;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .ws-badge span { color: #7dd3fc; }
+
+  /* Main Stage */
+  .stage-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #draw-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 25;
+    pointer-events: none;
+  }
+  #draw-canvas.drawing-active { pointer-events: auto; cursor: crosshair; touch-action: none; }
+  #draw-canvas.eraser-active { pointer-events: auto; cursor: cell; touch-action: none; }
+
+  .glass-toast {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 35;
+    background: rgba(15, 23, 42, 0.86);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size: 13.5px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .glass-toast.visible { opacity: 1; }
+
+  .page-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    gap: 12px;
+  }
+  .page-view.active { display: flex; }
+
+  /* Liquid Glass Panel */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(185%);
+    -webkit-backdrop-filter: blur(24px) saturate(185%);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow: var(--glass-shadow);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .card-title {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #0f172a;
+    padding-bottom: 7px;
+    margin-bottom: 8px;
+    border-bottom: 1.5px solid rgba(148, 163, 184, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .en-term {
+    font-family: -apple-system, "SF Pro Display", "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+  }
+
+  /* Frosted Blank Slots */
+  .blank-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 112px;
+    min-height: 32px;
+    padding: 2px 12px;
+    border-bottom: 2.5px solid #475569;
+    background: rgba(255, 255, 255, 0.52);
+    border-radius: 10px 10px 4px 4px;
+    font-weight: 800;
+    color: transparent;
+    transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    vertical-align: middle;
+    margin: 0 3px;
+  }
+  .blank-slot.target-now {
+    background: rgba(254, 240, 138, 0.85);
+    border-bottom-color: #d97706;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.32);
+  }
+  .blank-slot.revealed {
+    color: #be123c;
+    background: rgba(255, 228, 230, 0.88);
+    border-bottom-color: #e11d48;
+    animation: liquidPop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .blank-slot.revealed-blue {
+    color: #1d4ed8;
+    background: rgba(219, 234, 254, 0.88);
+    border-bottom-color: #2563eb;
+    animation: liquidPop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  .blank-slot.revealed-green {
+    color: #047857;
+    background: rgba(209, 250, 229, 0.88);
+    border-bottom-color: #059669;
+    animation: liquidPop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+
+  @keyframes liquidPop {
+    0% { transform: scale(0.92); opacity: 0.3; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Frosted Tables */
+  table.ws-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 16.5px;
+    text-align: center;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,0.75);
+  }
+  table.ws-table th {
+    background: rgba(15, 23, 42, 0.84);
+    color: #fff;
+    padding: 8px 6px;
+    font-weight: 700;
+  }
+  table.ws-table th.col-new { background: rgba(190, 18, 60, 0.88); }
+  table.ws-table td {
+    padding: 7px 6px;
+    background: rgba(255, 255, 255, 0.55);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+    border-right: 1px solid rgba(148, 163, 184, 0.3);
+    font-weight: 700;
+  }
+  table.ws-table tr.row-highlight td { background: rgba(254, 240, 138, 0.85) !important; }
+  table.ws-table tr.row-eq-old td { background: rgba(204, 251, 241, 0.85); }
+  table.ws-table tr.row-eq-new td { background: rgba(255, 228, 230, 0.88); }
+
+  .cell-ans {
+    display: inline-block;
+    min-width: 48px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    border-bottom: 2px solid #64748b;
+    background: rgba(255,255,255,0.6);
+    color: transparent;
+  }
+  .cell-ans.target-now { background: rgba(254, 240, 138, 0.9); border-bottom-color: #d97706; }
+  .cell-ans.revealed { color: #be123c; background: rgba(255, 228, 230, 0.95); border-bottom-color: #e11d48; }
+
+  .word-choice {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+  }
+  .word-choice.circled {
+    border-color: #e11d48;
+    background: rgba(255, 228, 230, 0.88);
+    color: #be123c;
+    font-weight: 900;
+  }
+
+  .ws-item {
+    font-size: 16.5px;
+    line-height: 1.45;
+    padding: 7px 12px;
+    border-radius: 14px;
+    border: 1.5px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .ws-item.active-item {
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(251, 191, 36, 0.75);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+  }
+
+  .cantonese-note {
+    background: rgba(255, 255, 255, 0.62);
+    border-left: 4px solid #2563eb;
+    padding: 9px 13px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.4;
+    margin-top: auto;
+  }
+  .hidden-step { visibility: hidden; opacity: 0; }
+  .shown-step { visibility: visible; opacity: 1; transition: opacity 0.28s ease; }
+
+  /* Frosted Diagram Container */
+  .svg-box {
+    flex: 1;
+    min-height: 0;
+    background: rgba(255, 255, 255, 0.68);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    border-radius: 16px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .svg-box svg { width: 100%; height: 100%; }
+
+  .mc-option {
+    background: rgba(255, 255, 255, 0.62);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    border-radius: 14px;
+    padding: 7px 12px;
+    transition: all 0.2s ease;
+  }
+  .mc-option.opt-active { border-color: #f59e0b; background: rgba(254, 249, 195, 0.82); }
+  .mc-option.opt-wrong { border-color: #fda4af; background: rgba(255, 228, 230, 0.82); }
+  .mc-option.opt-correct { border-color: #6ee7b7; background: rgba(209, 250, 229, 0.85); }
+  .mc-exp {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(100, 116, 139, 0.4);
+    font-size: 13.8px;
+    display: none;
+  }
+  .mc-exp.shown { display: block; animation: liquidPop 0.25s ease; }
+
+  /* Floating Liquid Glass Bottom Dock */
+  .glass-dock {
+    height: 58px;
+    background: var(--glass-strong);
+    backdrop-filter: blur(24px) saturate(190%);
+    -webkit-backdrop-filter: blur(24px) saturate(190%);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow);
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-shrink: 0;
+    z-index: 30;
+  }
+
+  .tool-group { display: flex; align-items: center; gap: 5px; }
+  .tool-btn {
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.55);
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .tool-btn.active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+  }
+
+  .color-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    cursor: pointer;
+    padding: 0;
+  }
+  .color-dot.active { transform: scale(1.18); box-shadow: 0 0 0 3px #0f172a; }
+
+  .step-dots { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: #334155; }
+  .s-dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(148,163,184,0.5); }
+  .s-dot.done { background: #10b981; }
+  .s-dot.cur { background: #f59e0b; transform: scale(1.3); }
+
+  .ctrl-btn {
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.65);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: transform 0.15s ease;
+  }
+  .ctrl-btn:active { transform: scale(0.96); }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-prev { background: rgba(255,255,255,0.75); color: #0f172a; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(234, 88, 12, 0.35), inset 0 1px 1px rgba(255,255,255,0.6);
+  }
+  .btn-reveal.done { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: none; }
+  .btn-next {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35), inset 0 1px 1px rgba(255,255,255,0.6);
+  }
+
+  /* Glass Modals */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 60;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-mask.open { display: flex; }
+  .modal-glass {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(26px) saturate(180%);
+    border: 1.5px solid rgba(255,255,255,0.9);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+  }
+  .modal-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(148,163,184,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 17px;
+  }
+  .modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    user-select: text;
+  }
+  .lottery-num {
+    font-size: 32px;
+    font-weight: 900;
+    color: #1d4ed8;
+    background: rgba(255,255,255,0.85);
+    border: 2px solid #60a5fa;
+    border-radius: 16px;
+    padding: 10px 24px;
+    display: inline-block;
+    margin: 8px 0;
+    min-width: 220px;
+  }
+  .chip { background: rgba(226,232,240,0.8); padding: 3px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+  .chip.latest { background: #dbeafe; color: #1d4ed8; border: 1px solid #3b82f6; }
+</style>
+</head>
+<body>
+<div class="liquid-canvas-bg"></div>
+<div id="app">
+  <!-- TOP GLASS NAVIGATION -->
+  <header class="glass-topbar">
+    <div class="brand">
+      <span class="brand-orb">DSE ECON 7.1</span>
+      <span>Unit Sales Tax</span>
+    </div>
+    <nav class="nav-pills" id="nav-pills">
+      <button class="nav-pill active" data-page="0">1. A 定義預測</button>
+      <button class="nav-pill" data-page="1">2. B1 稅前圖表</button>
+      <button class="nav-pill" data-page="2">3. B2 稅後列表</button>
+      <button class="nav-pill" data-page="3">4. B2 畫線移動</button>
+      <button class="nav-pill" data-page="4">5. B2 價格收入</button>
+      <button class="nav-pill" data-page="5">6. B2 稅項負擔</button>
+      <button class="nav-pill" data-page="6">7. C 總結思考</button>
+      <button class="nav-pill" data-page="7">8. D DSE MC</button>
+    </nav>
+    <div class="top-actions">
+      <button class="glass-btn accent" id="btn-lottery">🎲 抽籤 (<span id="lottery-count">30</span>)</button>
+      <button class="glass-btn" id="btn-toggle-prompt">👁️ 隱藏提示</button>
+      <div class="glass-btn" id="timer-box" title="點擊開始/暫停；點擊 ⚙️ 修改分鐘">
+        <span>⏱</span><span id="timer-val" style="color:#d97706; font-variant-numeric:tabular-nums;">55:00</span>
+        <span id="btn-timer-set" style="opacity:0.65; padding-left:2px;">⚙️</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TEACHER GUIDANCE RIBBON -->
+  <section class="prompt-ribbon" id="prompt-ribbon">
+    <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+      <span class="role-chip role-ask" id="prompt-badge">老師提問</span>
+      <div>
+        <div class="prompt-main" id="prompt-main">載入中...</div>
+        <div class="prompt-sub" id="prompt-sub"></div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <button class="glass-btn" id="btn-edit-prompt">✏️ 編輯提示</button>
+      <div class="ws-badge" id="ws-locator">工作紙位置：<span>Part A</span></div>
+    </div>
+  </section>
+
+  <!-- STAGE -->
+  <main class="stage-wrap" id="stage-wrap">
+    <div class="glass-toast" id="draw-toast">📏 已轉換為直線</div>
+    <canvas id="draw-canvas"></canvas>
+
+    <!-- PAGE 0 -->
+    <div class="page-view active" id="page-0" style="flex-direction: column;">
+      <div class="glass-card" style="flex: 1; justify-content: space-between; padding: 22px 28px;">
+        <div class="card-title" style="font-size: 20px;">
+          <span class="en-term">7.1 Unit Sales Tax — A. Meaning</span>
+          <span style="font-size: 13.5px; color: #475569;">工作紙第 1 頁頂部</span>
+        </div>
+        <div style="font-size: 21px; line-height: 1.65;">
+          <div class="en-term" style="margin-bottom: 12px;">
+            A <span style="color:#1d4ed8; text-decoration: underline;">unit sales tax</span> is imposed when the <strong>same amount of tax</strong> is levied on <strong>each unit of output</strong>.
+          </div>
+          <div style="font-size: 16px; color: #334155; margin-bottom: 16px;">
+            💡 廣東話理解：無論貨品賣幾多錢，政府對<strong>每件</strong>賣出嘅貨品徵收<strong>相同金額</strong>嘅稅。
+          </div>
+          <div class="ws-item active-item" id="p0-item-target" style="font-size: 21px; padding: 12px 16px;">
+            <strong class="en-term">Target:</strong>
+            <span class="blank-slot target-now" id="p0-blank-target" style="min-width: 240px;">Producers (sellers)</span>
+          </div>
+        </div>
+        <div style="background: rgba(254, 243, 199, 0.72); border: 1.5px solid rgba(245, 158, 11, 0.6); border-radius: 16px; padding: 16px 20px;">
+          <div class="en-term" style="font-size: 21px; color: #92400e;">Prediction: $2 per-unit sales tax = Price increases by $2?</div>
+          <div id="p0-pred-note" class="cantonese-note hidden-step" style="margin-top: 10px; border-left-color: #d97706;">
+            🤔 <strong>先記低大家嘅猜測！</strong> 政府向賣家每件收 <strong>$2 稅</strong>，係咪代表市價一定會加足 <strong>$2</strong>？即刻用 Part B 驗證！
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 1 -->
+    <div class="page-view" id="page-1">
+      <div class="glass-card" style="width: 39%;">
+        <div class="card-title"><span class="en-term">B. Example — Schedule</span><span style="font-size:13px;">供需表</span></div>
+        <table class="ws-table" style="flex: 1;">
+          <thead><tr><th>Price ($)</th><th>Qd (units)</th><th>Qs (units)</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td style="color:var(--demand)">50</td><td style="color:var(--supply0)">10</td></tr>
+            <tr><td>2</td><td style="color:var(--demand)">40</td><td style="color:var(--supply0)">20</td></tr>
+            <tr id="p1-row-3"><td>3</td><td style="color:var(--demand)">30</td><td style="color:var(--supply0)">30</td></tr>
+            <tr><td>4</td><td style="color:var(--demand)">20</td><td style="color:var(--supply0)">40</td></tr>
+            <tr><td>5</td><td style="color:var(--demand)">10</td><td style="color:var(--supply0)">50</td></tr>
+          </tbody>
+        </table>
+        <div class="cantonese-note" style="margin-top: 10px;">✏️ <strong>畫圖提示：</strong>先連 <strong>D</strong>，再連 <strong>S0</strong>，搵相交點 <strong>E</strong>！</div>
+      </div>
+
+      <div class="glass-card" style="width: 61%;">
+        <div class="card-title"><span class="en-term">Before tax — Diagram &amp; Equilibrium</span></div>
+        <div style="display: flex; flex: 1; min-height: 0; gap: 12px; align-items: center;">
+          <div class="svg-box" style="width: 54%; height: 100%;">
+            <svg viewBox="0 0 360 320">
+              <g stroke="#cbd5e1" stroke-width="1">
+                <line x1="55" y1="40" x2="330" y2="40"/><line x1="55" y1="88" x2="330" y2="88"/>
+                <line x1="55" y1="136" x2="330" y2="136"/><line x1="55" y1="184" x2="330" y2="184"/>
+                <line x1="55" y1="232" x2="330" y2="232"/><line x1="105" y1="25" x2="105" y2="280"/>
+                <line x1="155" y1="25" x2="155" y2="280"/><line x1="205" y1="25" x2="205" y2="280"/>
+                <line x1="255" y1="25" x2="255" y2="280"/><line x1="305" y1="25" x2="305" y2="280"/>
+              </g>
+              <rect id="p1-tr-rect" x="55" y="136" width="150" height="144" fill="rgba(16, 185, 129, 0.24)" stroke="#059669" stroke-width="2" stroke-dasharray="5,3" style="display:none;"/>
+              <text id="p1-tr-label" x="130" y="215" text-anchor="middle" fill="#065f46" font-size="14" font-weight="800" style="display:none;">TR = TE = $90</text>
+              <line x1="55" y1="20" x2="55" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+              <line x1="55" y1="280" x2="340" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="42" y="22" font-size="17" font-weight="800">P</text><text x="332" y="302" font-size="16" font-weight="800">Q/t</text><text x="40" y="298" font-size="15" font-weight="700">0</text>
+              <text x="44" y="45" text-anchor="end" font-size="14" font-weight="700">5</text><text x="44" y="93" text-anchor="end" font-size="14" font-weight="700">4</text>
+              <text x="44" y="141" text-anchor="end" font-size="14" font-weight="700">3</text><text x="44" y="189" text-anchor="end" font-size="14" font-weight="700">2</text>
+              <text x="44" y="237" text-anchor="end" font-size="14" font-weight="700">1</text>
+              <text x="105" y="298" text-anchor="middle" font-size="14" font-weight="700">10</text><text x="155" y="298" text-anchor="middle" font-size="14" font-weight="700">20</text>
+              <text x="205" y="298" text-anchor="middle" font-size="14" font-weight="700">30</text><text x="255" y="298" text-anchor="middle" font-size="14" font-weight="700">40</text>
+              <text x="305" y="298" text-anchor="middle" font-size="14" font-weight="700">50</text>
+              <g id="p1-demand-group" style="display:none;">
+                <line x1="105" y1="40" x2="305" y2="232" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="105" cy="40" r="4.5" fill="#2563eb"/><circle cx="155" cy="88" r="4.5" fill="#2563eb"/><circle cx="205" cy="136" r="4.5" fill="#2563eb"/>
+                <circle cx="255" cy="184" r="4.5" fill="#2563eb"/><circle cx="305" cy="232" r="4.5" fill="#2563eb"/>
+                <text x="313" y="237" font-size="17" font-weight="800" fill="#2563eb">D</text>
+              </g>
+              <g id="p1-supply-group" style="display:none;">
+                <line x1="105" y1="232" x2="305" y2="40" stroke="#0d9488" stroke-width="3.5" stroke-linecap="round"/>
+                <circle cx="105" cy="232" r="4.5" fill="#0d9488"/><circle cx="155" cy="184" r="4.5" fill="#0d9488"/><circle cx="205" cy="136" r="4.5" fill="#0d9488"/>
+                <circle cx="255" cy="88" r="4.5" fill="#0d9488"/><circle cx="305" cy="40" r="4.5" fill="#0d9488"/>
+                <text x="312" y="44" font-size="17" font-weight="800" fill="#0d9488">S0</text>
+              </g>
+              <g id="p1-eq-group" style="display:none;">
+                <line x1="55" y1="136" x2="205" y2="136" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4"/>
+                <line x1="205" y1="136" x2="205" y2="280" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4"/>
+                <circle cx="205" cy="136" r="7" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+                <text x="216" y="132" font-size="16" font-weight="800" fill="#dc2626">E</text>
+              </g>
+            </svg>
+          </div>
+          <div style="width: 46%; display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.55); padding: 14px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.85);">
+            <div class="en-term" style="font-size: 18px; border-bottom: 1.5px solid rgba(148,163,184,0.4); padding-bottom: 5px;">Before tax</div>
+            <div class="ws-item" id="p1-item-p">• <span class="en-term">equilibrium price</span> = $<span class="blank-slot" id="p1-ans-p" style="min-width: 64px;">3</span></div>
+            <div class="ws-item" id="p1-item-q">• <span class="en-term">equilibrium quantity transacted</span> = <span class="blank-slot" id="p1-ans-q" style="min-width: 64px;">30</span> units</div>
+            <div class="ws-item" id="p1-item-tr">
+              • <span class="en-term">total revenue = total expenditure</span><br>
+              <div style="margin-top: 6px; padding-left: 10px;">
+                = $<span class="blank-slot" id="p1-ans-trp" style="min-width: 52px;">3</span> × <span class="blank-slot" id="p1-ans-trq" style="min-width: 56px;">30</span> units<br>
+                = $<span class="blank-slot" id="p1-ans-tr" style="min-width: 78px; margin-top: 6px;">90</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="page-view" id="page-2" style="flex-direction: column;">
+      <div class="glass-card" style="flex-shrink: 0; padding: 12px 18px;">
+        <div class="en-term" style="font-size: 18px; line-height: 1.55;">
+          For each unit of output, producers have to pay <strong>$2</strong> to the government.<br>
+          This will <span class="word-choice" id="p2-inc">increase</span> / <span class="word-choice" id="p2-dec">decrease</span> their incentive to produce, because the price they actually receive <span class="blank-slot target-now" id="p2-ans-reason" style="min-width: 220px;">decreases (by $2)</span>.
+        </div>
+      </div>
+      <div class="glass-card" style="flex: 1;">
+        <div class="card-title"><span class="en-term">New Supply Schedule after $2 Unit Tax</span></div>
+        <div style="display: flex; flex: 1; min-height: 0; gap: 14px;">
+          <div style="width: 64%; display: flex; flex-direction: column;">
+            <table class="ws-table" style="flex: 1;">
+              <thead><tr><th>Price ($)</th><th>Qd (units)</th><th>Qs (units)</th><th class="col-new">New Qs after tax</th></tr></thead>
+              <tbody>
+                <tr id="p2-r1"><td>1</td><td>50</td><td style="color:var(--supply0)">10</td><td><span class="cell-ans" id="p2-c1">—</span></td></tr>
+                <tr id="p2-r2"><td>2</td><td>40</td><td style="color:var(--supply0)">20</td><td><span class="cell-ans" id="p2-c2">—</span></td></tr>
+                <tr id="p2-r3"><td>3</td><td>30</td><td style="color:var(--supply0)">30</td><td><span class="cell-ans" id="p2-c3">10</span></td></tr>
+                <tr id="p2-r4"><td>4</td><td>20</td><td style="color:var(--supply0)">40</td><td><span class="cell-ans" id="p2-c4">20</span></td></tr>
+                <tr id="p2-r5"><td>5</td><td>10</td><td style="color:var(--supply0)">50</td><td><span class="cell-ans" id="p2-c5">30</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="width: 36%; display: flex; flex-direction: column; justify-content: space-between; font-size: 15px; line-height: 1.4;">
+            <div style="display:flex; flex-direction:column; gap:7px;">
+              <div style="font-weight: 800; font-size: 16px;">🧠 推算口訣：稅前實收 = 市價 − $2</div>
+              <div style="background:rgba(255,255,255,0.65); padding:7px 10px; border-radius:10px;"><strong>① 市價 $1 或 $2：</strong>扣完 $2 稅剩 $0 或負數 → 填 <strong>「—」</strong></div>
+              <div style="background:rgba(255,255,255,0.65); padding:7px 10px; border-radius:10px;"><strong>② 老師示範 (P = $3)：</strong>稅前收 $1 供應 10 件 → 加稅後要賣 <strong>$1 + $2 = $3</strong>！</div>
+              <div style="background:rgba(255,255,255,0.65); padding:7px 10px; border-radius:10px;"><strong>③ 輪到你試 (P = $4, $5)：</strong>分別填幾多？</div>
+            </div>
+            <div id="p2-eq-callout" class="cantonese-note hidden-step" style="border-left-color: #e11d48; font-weight: 700;">
+              🎯 新均衡：喺 <strong>P = $4</strong> 時，Qd (20) = New Qs (20)！
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="page-view" id="page-3">
+      <div class="glass-card" style="width: 54%;">
+        <div class="card-title"><span class="en-term">After-Tax Diagram (0 — P — Q/t)</span><span style="font-size:13px; color:#e11d48;">畫新供應線 S1</span></div>
+        <div class="svg-box">
+          <svg viewBox="0 0 380 320">
+            <g stroke="#cbd5e1" stroke-width="1">
+              <line x1="55" y1="40" x2="340" y2="40"/><line x1="55" y1="88" x2="340" y2="88"/>
+              <line x1="55" y1="136" x2="340" y2="136"/><line x1="55" y1="184" x2="340" y2="184"/>
+              <line x1="55" y1="232" x2="340" y2="232"/><line x1="105" y1="25" x2="105" y2="280"/>
+              <line x1="155" y1="25" x2="155" y2="280"/><line x1="205" y1="25" x2="205" y2="280"/>
+              <line x1="255" y1="25" x2="255" y2="280"/><line x1="305" y1="25" x2="305" y2="280"/>
+            </g>
+            <line x1="55" y1="20" x2="55" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+            <line x1="55" y1="280" x2="350" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+            <text x="42" y="22" font-size="17" font-weight="800">P</text><text x="342" y="302" font-size="16" font-weight="800">Q/t</text><text x="40" y="298" font-size="15" font-weight="700">0</text>
+            <text x="44" y="45" text-anchor="end" font-size="14" font-weight="700">5</text><text x="44" y="93" text-anchor="end" font-size="14" font-weight="700">4</text>
+            <text x="44" y="141" text-anchor="end" font-size="14" font-weight="700">3</text><text x="44" y="189" text-anchor="end" font-size="14" font-weight="700">2</text>
+            <text x="44" y="237" text-anchor="end" font-size="14" font-weight="700">1</text>
+            <text x="105" y="298" text-anchor="middle" font-size="14" font-weight="700">10</text><text x="155" y="298" text-anchor="middle" font-size="14" font-weight="700">20</text>
+            <text x="205" y="298" text-anchor="middle" font-size="14" font-weight="700">30</text><text x="255" y="298" text-anchor="middle" font-size="14" font-weight="700">40</text>
+            <text x="305" y="298" text-anchor="middle" font-size="14" font-weight="700">50</text>
+            <line x1="105" y1="40" x2="305" y2="232" stroke="#2563eb" stroke-width="3.2"/><text x="313" y="237" font-size="17" font-weight="800" fill="#2563eb">D</text>
+            <line x1="105" y1="232" x2="305" y2="40" stroke="#0d9488" stroke-width="3.2"/><text x="312" y="44" font-size="17" font-weight="800" fill="#0d9488">S0</text>
+            <line x1="55" y1="136" x2="205" y2="136" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4,4"/>
+            <line x1="205" y1="136" x2="205" y2="280" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4,4"/>
+            <circle cx="205" cy="136" r="5.5" fill="#0d9488"/><text x="215" y="133" font-size="15" font-weight="800" fill="#0f766e">E</text>
+            <g id="p3-pts-group" style="display:none;">
+              <line x1="105" y1="226" x2="105" y2="144" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="3,2"/><polygon points="105,138 100,147 110,147" fill="#f59e0b"/><text x="84" y="182" font-size="12.5" font-weight="800" fill="#b45309">+$2</text>
+              <line x1="155" y1="178" x2="155" y2="96" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="3,2"/><polygon points="155,90 150,99 160,99" fill="#f59e0b"/>
+              <line x1="205" y1="130" x2="205" y2="48" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="3,2"/><polygon points="205,42 200,51 210,51" fill="#f59e0b"/>
+              <circle cx="105" cy="136" r="5.5" fill="#e11d48"/><circle cx="155" cy="88" r="5.5" fill="#e11d48"/><circle cx="205" cy="40" r="5.5" fill="#e11d48"/>
+            </g>
+            <g id="p3-s1-group" style="display:none;">
+              <line x1="105" y1="136" x2="205" y2="40" stroke="#e11d48" stroke-width="3.8" stroke-linecap="round"/>
+              <text x="213" y="38" font-size="17" font-weight="800" fill="#e11d48">S1 (with $2 tax)</text>
+            </g>
+            <g id="p3-eq1-group" style="display:none;">
+              <line x1="55" y1="88" x2="155" y2="88" stroke="#e11d48" stroke-width="2.2" stroke-dasharray="5,4"/>
+              <line x1="155" y1="88" x2="155" y2="280" stroke="#e11d48" stroke-width="2.2" stroke-dasharray="5,4"/>
+              <circle cx="155" cy="88" r="7.5" fill="#e11d48" stroke="#fff" stroke-width="2"/><text x="166" y="83" font-size="16" font-weight="800" fill="#be123c">E1</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="glass-card" style="width: 46%; justify-content: space-between;">
+        <div>
+          <div class="card-title"><span class="en-term">Shift &amp; New Equilibrium</span></div>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            <div class="ws-item active-item" id="p3-item-shift">
+              • <span class="en-term">The supply curve shifts</span><br>
+              <span class="blank-slot target-now" id="p3-ans-shift" style="min-width: 240px; margin-top: 6px;">upwards (by $2) / leftwards</span>
+            </div>
+            <div class="ws-item" id="p3-item-p">• <span class="en-term">New equilibrium price</span> = <span class="blank-slot" id="p3-ans-p" style="min-width: 75px;">$4</span></div>
+            <div class="ws-item" id="p3-item-q">• <span class="en-term">New quantity transacted</span> = <span class="blank-slot" id="p3-ans-q" style="min-width: 95px;">20 units</span></div>
+          </div>
+        </div>
+        <div id="p3-pred-verify" class="cantonese-note hidden-step" style="border-left-color: #059669; font-size: 15.5px;">
+          ✅ <strong>驗證 Part A 預測：</strong>徵收 <strong>$2</strong> 單位稅，市價只由 <strong>$3 升到 $4（升 $1）</strong>，並無加足 $2！
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4 -->
+    <div class="page-view" id="page-4">
+      <div class="glass-card" style="width: 46%;">
+        <div class="card-title"><span class="en-term">Read Diagram: Prices, TR &amp; TE</span></div>
+        <div class="svg-box">
+          <svg viewBox="0 0 370 320">
+            <g stroke="#cbd5e1" stroke-width="1">
+              <line x1="55" y1="40" x2="335" y2="40"/><line x1="55" y1="88" x2="335" y2="88"/>
+              <line x1="55" y1="136" x2="335" y2="136"/><line x1="55" y1="184" x2="335" y2="184"/>
+              <line x1="55" y1="232" x2="335" y2="232"/><line x1="105" y1="25" x2="105" y2="280"/>
+              <line x1="155" y1="25" x2="155" y2="280"/><line x1="205" y1="25" x2="205" y2="280"/>
+              <line x1="255" y1="25" x2="255" y2="280"/><line x1="305" y1="25" x2="305" y2="280"/>
+            </g>
+            <rect id="p4-area-te" x="55" y="88" width="100" height="192" fill="rgba(59, 130, 246, 0.22)" stroke="#2563eb" stroke-width="2.5" style="display:none;"/>
+            <text id="p4-lbl-te" x="105" y="136" text-anchor="middle" fill="#1e3a8a" font-size="13.5" font-weight="800" style="display:none;">TE = $4 × 20 = $80</text>
+            <rect id="p4-area-trnet" x="55" y="184" width="100" height="96" fill="rgba(16, 185, 129, 0.32)" stroke="#059669" stroke-width="2.5" style="display:none;"/>
+            <text id="p4-lbl-trnet" x="105" y="232" text-anchor="middle" fill="#065f46" font-size="13" font-weight="800" style="display:none;">TR(excl.) = $40</text>
+            <line x1="55" y1="20" x2="55" y2="280" stroke="#0f172a" stroke-width="2.5"/><line x1="55" y1="280" x2="345" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+            <text x="42" y="22" font-size="17" font-weight="800">P</text><text x="336" y="302" font-size="16" font-weight="800">Q/t</text><text x="40" y="298" font-size="15" font-weight="700">0</text>
+            <text x="44" y="45" text-anchor="end" font-size="14" font-weight="700">5</text><text x="44" y="93" text-anchor="end" font-size="15" font-weight="800" fill="#e11d48">4</text>
+            <text x="44" y="141" text-anchor="end" font-size="14" font-weight="700">3</text><text x="44" y="189" text-anchor="end" font-size="15" font-weight="800" fill="#059669">2</text>
+            <text x="44" y="237" text-anchor="end" font-size="14" font-weight="700">1</text>
+            <text x="105" y="298" text-anchor="middle" font-size="14" font-weight="700">10</text><text x="155" y="298" text-anchor="middle" font-size="15" font-weight="800">20</text>
+            <text x="205" y="298" text-anchor="middle" font-size="14" font-weight="700">30</text><text x="255" y="298" text-anchor="middle" font-size="14" font-weight="700">40</text>
+            <text x="305" y="298" text-anchor="middle" font-size="14" font-weight="700">50</text>
+            <line x1="105" y1="40" x2="305" y2="232" stroke="#2563eb" stroke-width="3.2"/><text x="312" y="237" font-size="16" font-weight="800" fill="#2563eb">D</text>
+            <line x1="105" y1="232" x2="305" y2="40" stroke="#0d9488" stroke-width="3.2"/><text x="312" y="44" font-size="16" font-weight="800" fill="#0d9488">S0</text>
+            <line x1="105" y1="136" x2="205" y2="40" stroke="#e11d48" stroke-width="3.5"/><text x="212" y="38" font-size="16" font-weight="800" fill="#e11d48">S1</text>
+            <line x1="55" y1="88" x2="155" y2="88" stroke="#e11d48" stroke-width="2" stroke-dasharray="4,3"/>
+            <line x1="155" y1="88" x2="155" y2="280" stroke="#0f172a" stroke-width="2" stroke-dasharray="4,3"/>
+            <circle cx="155" cy="88" r="6.5" fill="#e11d48"/><text x="164" y="83" font-size="14.5" font-weight="800" fill="#be123c">E1 ($4)</text>
+            <g id="p4-net-group" style="display:none;">
+              <line x1="155" y1="95" x2="155" y2="177" stroke="#d97706" stroke-width="3"/><polygon points="155,183 150,174 160,174" fill="#d97706"/>
+              <text x="163" y="142" font-size="13.5" font-weight="800" fill="#b45309">−$2 tax</text>
+              <line x1="55" y1="184" x2="155" y2="184" stroke="#059669" stroke-width="2" stroke-dasharray="4,3"/>
+              <circle cx="155" cy="184" r="6.5" fill="#059669"/><text x="164" y="188" font-size="14.5" font-weight="800" fill="#047857">G ($2)</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="glass-card" style="width: 54%; justify-content: space-evenly;">
+        <div class="ws-item active-item" id="p4-item-1">• <span class="en-term">Price paid by consumer</span> = <span class="blank-slot target-now" id="p4-ans-1" style="min-width: 72px;">$4</span></div>
+        <div class="ws-item" id="p4-item-2">• <span class="en-term">Price received by supplier (including tax)</span> = <span class="blank-slot" id="p4-ans-2" style="min-width: 72px;">$4</span></div>
+        <div class="ws-item" id="p4-item-3">
+          • <span class="en-term">Producers’ total revenue including tax = Consumers’ total expenditure</span><br>
+          <div style="padding-left: 12px; margin-top: 3px;">
+            = <span class="blank-slot" id="p4-ans-3" style="min-width: 190px;">$4 × 20 units = $80</span><br>
+            <span style="font-size: 15px;">(depends on <span class="blank-slot" id="p4-ans-3b" style="min-width: 220px;">price elasticity of demand</span>)</span>
+          </div>
+        </div>
+        <div class="ws-item" id="p4-item-4">• <span class="en-term">Price received by supplier (excluding tax)</span> = <span class="blank-slot" id="p4-ans-4" style="min-width: 145px;">$4 − $2 = $2</span></div>
+        <div class="ws-item" id="p4-item-5">
+          • <span class="en-term">Producers’ total revenue excluding tax</span><br>
+          <div style="padding-left: 12px; margin-top: 3px;">
+            = <span class="blank-slot" id="p4-ans-5" style="min-width: 190px;">$2 × 20 units = $40</span>
+            <span style="font-size: 15px;">(It MUST <span class="blank-slot" id="p4-ans-5b" style="min-width: 105px;">decrease</span>)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 5 -->
+    <div class="page-view" id="page-5">
+      <div class="glass-card" style="width: 46%;">
+        <div class="card-title"><span class="en-term">Tax Burden &amp; Gov Tax Revenue</span></div>
+        <div class="svg-box">
+          <svg viewBox="0 0 370 320">
+            <g stroke="#cbd5e1" stroke-width="1">
+              <line x1="55" y1="40" x2="335" y2="40"/><line x1="55" y1="88" x2="335" y2="88"/>
+              <line x1="55" y1="136" x2="335" y2="136"/><line x1="55" y1="184" x2="335" y2="184"/>
+              <line x1="55" y1="232" x2="335" y2="232"/><line x1="105" y1="25" x2="105" y2="280"/>
+              <line x1="155" y1="25" x2="155" y2="280"/><line x1="205" y1="25" x2="205" y2="280"/>
+              <line x1="255" y1="25" x2="255" y2="280"/><line x1="305" y1="25" x2="305" y2="280"/>
+            </g>
+            <g id="p5-cb-group" style="display:none;">
+              <rect x="55" y="88" width="100" height="48" fill="rgba(245, 158, 11, 0.35)" stroke="#d97706" stroke-width="2.5"/>
+              <text x="105" y="110" text-anchor="middle" fill="#92400e" font-size="12" font-weight="800">Consumers' Burden</text>
+              <text x="105" y="126" text-anchor="middle" fill="#92400e" font-size="12" font-weight="800">($4−$3)×20 = $20</text>
+            </g>
+            <g id="p5-pb-group" style="display:none;">
+              <rect x="55" y="136" width="100" height="48" fill="rgba(14, 165, 233, 0.32)" stroke="#0284c7" stroke-width="2.5"/>
+              <text x="105" y="158" text-anchor="middle" fill="#075985" font-size="12" font-weight="800">Producers' Burden</text>
+              <text x="105" y="174" text-anchor="middle" fill="#075985" font-size="12" font-weight="800">($3−$2)×20 = $20</text>
+            </g>
+            <g id="p5-gov-group" style="display:none;">
+              <path d="M 162 88 L 172 88 L 172 184 L 162 184" fill="none" stroke="#be123c" stroke-width="3"/>
+              <text x="178" y="132" font-size="13" font-weight="800" fill="#be123c">Gov Tax Rev</text>
+              <text x="178" y="148" font-size="13" font-weight="800" fill="#be123c">= $20 + $20 = $40</text>
+            </g>
+            <line x1="55" y1="20" x2="55" y2="280" stroke="#0f172a" stroke-width="2.5"/><line x1="55" y1="280" x2="345" y2="280" stroke="#0f172a" stroke-width="2.5"/>
+            <text x="42" y="22" font-size="17" font-weight="800">P</text><text x="336" y="302" font-size="16" font-weight="800">Q/t</text><text x="40" y="298" font-size="15" font-weight="700">0</text>
+            <text x="44" y="45" text-anchor="end" font-size="14" font-weight="700">5</text><text x="44" y="93" text-anchor="end" font-size="15" font-weight="800" fill="#e11d48">4</text>
+            <text x="44" y="141" text-anchor="end" font-size="15" font-weight="800">3</text><text x="44" y="189" text-anchor="end" font-size="15" font-weight="800" fill="#059669">2</text>
+            <text x="44" y="237" text-anchor="end" font-size="14" font-weight="700">1</text>
+            <text x="105" y="298" text-anchor="middle" font-size="14" font-weight="700">10</text><text x="155" y="298" text-anchor="middle" font-size="15" font-weight="800">20</text>
+            <text x="205" y="298" text-anchor="middle" font-size="14" font-weight="700">30</text><text x="255" y="298" text-anchor="middle" font-size="14" font-weight="700">40</text>
+            <text x="305" y="298" text-anchor="middle" font-size="14" font-weight="700">50</text>
+            <line x1="105" y1="40" x2="305" y2="232" stroke="#2563eb" stroke-width="3"/><text x="312" y="237" font-size="16" font-weight="800" fill="#2563eb">D</text>
+            <line x1="105" y1="232" x2="305" y2="40" stroke="#0d9488" stroke-width="3"/><text x="312" y="44" font-size="16" font-weight="800" fill="#0d9488">S0</text>
+            <line x1="105" y1="136" x2="205" y2="40" stroke="#e11d48" stroke-width="3.2"/><text x="212" y="38" font-size="16" font-weight="800" fill="#e11d48">S1</text>
+            <line x1="55" y1="88" x2="155" y2="88" stroke="#e11d48" stroke-width="1.8" stroke-dasharray="4,3"/>
+            <line x1="55" y1="136" x2="205" y2="136" stroke="#64748b" stroke-width="1.8" stroke-dasharray="4,3"/>
+            <line x1="55" y1="184" x2="155" y2="184" stroke="#059669" stroke-width="1.8" stroke-dasharray="4,3"/>
+            <line x1="155" y1="88" x2="155" y2="280" stroke="#0f172a" stroke-width="1.8" stroke-dasharray="4,3"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="glass-card" style="width: 54%; justify-content: space-evenly;">
+        <div style="background: rgba(255,255,255,0.65); border-radius: 12px; padding: 10px 14px; font-size: 17.5px;">
+          📌 <span class="en-term">Government tax revenue = $2 × 20 units = $40</span>
+        </div>
+        <div class="ws-item active-item" id="p5-item-cb">
+          <div style="font-size: 13.5px; font-weight: 800; color: #b45309;">① 老師示範（買家加咗幾多價？）：</div>
+          • <span class="en-term">Consumers’ tax burden</span> = <span class="blank-slot target-now" id="p5-ans-cb" style="min-width: 240px;">($4 − $3) × 20 units = $20</span>
+        </div>
+        <div class="ws-item" id="p5-item-pb">
+          <div style="font-size: 13.5px; font-weight: 800; color: #0369a1;">② 輪到你試（賣家實收少咗幾多？）：</div>
+          • <span class="en-term">Producers’ tax burden</span> = <span class="blank-slot" id="p5-ans-pb" style="min-width: 240px;">($3 − $2) × 20 units = $20</span>
+        </div>
+        <div class="ws-item" id="p5-item-gov">
+          <div style="font-size: 13.5px; font-weight: 800; color: #be123c;">③ 兩者相加 = 政府總稅收：</div>
+          • <span class="en-term">Government tax revenue</span> = <span class="blank-slot" id="p5-ans-gov" style="min-width: 240px;">$20 + $20 = $40</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 6 -->
+    <div class="page-view" id="page-6" style="flex-direction: column;">
+      <div class="glass-card" style="flex: 1; justify-content: space-between; padding: 18px 24px;">
+        <div class="card-title"><span class="en-term">C. General Conclusions</span></div>
+        <div style="display: flex; flex-direction: column; gap: 9px; font-size: 18px;">
+          <div class="ws-item active-item" id="p6-c1" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="en-term">1. $x per-unit sales tax is <strong>not necessarily</strong> result in $x increase in market price</span>
+            <span class="blank-slot target-now" id="p6-b1" style="min-width: 195px; font-size: 15px;">例：$2 稅 → P 只升 $1</span>
+          </div>
+          <div class="ws-item" id="p6-c2" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="en-term">2. Q <strong>decreases</strong> &nbsp;&amp;&nbsp; P <strong>increases</strong></span>
+            <span class="blank-slot" id="p6-b2" style="min-width: 195px; font-size: 15px;">Q: 30→20 | P: $3→$4</span>
+          </div>
+          <div class="ws-item" id="p6-c3" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="en-term">3. Consumers’ total expenditure <strong>may increase, decrease or remain unchanged</strong> (depends on <u>Ed</u>)</span>
+            <span class="blank-slot" id="p6-b3" style="min-width: 195px; font-size: 15px;">視乎需求彈性 Ed</span>
+          </div>
+          <div class="ws-item" id="p6-c4" style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="en-term">4. The price and total revenue that producers <strong>actually received decrease</strong></span>
+            <span class="blank-slot" id="p6-b4" style="min-width: 195px; font-size: 15px;">必定減少 ($90→$40)</span>
+          </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.58); border: 1.5px dashed #64748b; border-radius: 14px; padding: 12px 16px;">
+          <div class="en-term" style="font-size: 16.5px;">Challenging Questions: • When are conclusions invalid? • What determines higher tax burden?</div>
+          <div id="p6-chal-hint" class="cantonese-note hidden-step" style="margin-top: 8px; border-left-color: #7c3aed;">
+            🔮 <strong>下堂預告：</strong>關鍵在於 <strong>需求彈性 (Ed)</strong> 與 <strong>供應彈性 (Es)</strong> 嘅大小比較！
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 7 -->
+    <div class="page-view" id="page-7">
+      <div class="glass-card" style="width: 47%; justify-content: space-between;">
+        <div>
+          <div class="card-title"><span class="en-term">2017 DSE Paper 1 Q16</span><span style="background:#7c3aed; color:#fff; padding:2px 8px; border-radius:999px; font-size:12px;">DSE 實戰</span></div>
+          <table class="ws-table" style="font-size: 14.5px; margin-top:6px;">
+            <thead><tr><th style="text-align:left; padding-left:8px;">Price ($)</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th>13</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left; padding-left:8px;">Qd</td><td>140</td><td>130</td><td>120</td><td>110</td><td class="dse-old">100</td><td class="dse-new">90</td><td>80</td><td>70</td></tr>
+              <tr><td style="text-align:left; padding-left:8px;">Qs</td><td>60</td><td>70</td><td>80</td><td>90</td><td class="dse-old">100</td><td class="dse-new">110</td><td>120</td><td>130</td></tr>
+              <tr id="p7-new-row" style="display:none;"><td style="text-align:left; padding-left:8px; color:#be123c;">New Qs</td><td>—</td><td>—</td><td style="color:#be123c;">60</td><td style="color:#be123c;">70</td><td style="color:#be123c;">80</td><td style="color:#be123c; background:rgba(254,205,211,0.9);">90</td><td style="color:#be123c;">100</td><td style="color:#be123c;">110</td></tr>
+            </tbody>
+          </table>
+          <p class="en-term" style="font-size: 16.5px; margin-top: 10px;">If the government imposed a <strong>$2 per unit tax</strong> on Good X,</p>
+        </div>
+        <div id="p7-summary" class="cantonese-note hidden-step" style="border-left-color: #be123c; font-size: 14.5px;">
+          📊 <strong>新舊均衡：</strong>稅前 P = $10, Q = 100；加 $2 稅後 P = $11, Q = 90（賣家實收 = $9）。
+        </div>
+      </div>
+
+      <div class="glass-card" style="width: 53%; justify-content: space-evenly;">
+        <div class="mc-option" id="p7-opt-a">
+          <div class="en-term" style="font-size: 16px; display:flex; justify-content:space-between;"><span>A. sellers’ revenue net of tax would become $990.</span><span id="p7-b-a"></span></div>
+          <div class="mc-exp" id="p7-e-a"><strong style="color:#dc2626;">✘ 錯誤｜</strong>實收 = ($11 − $2) × 90 = <strong>$810</strong>。（⚠️ $990 係未扣稅總收入）</div>
+        </div>
+        <div class="mc-option" id="p7-opt-b">
+          <div class="en-term" style="font-size: 16px; display:flex; justify-content:space-between;"><span>B. tax burden borne by the sellers would be $90.</span><span id="p7-b-b"></span></div>
+          <div class="mc-exp" id="p7-e-b"><strong style="color:#059669;">✔ 正確｜</strong>($10 − $9) × 90 units = $1 × 90 = <strong>$90</strong>。</div>
+        </div>
+        <div class="mc-option" id="p7-opt-c">
+          <div class="en-term" style="font-size: 16px; display:flex; justify-content:space-between;"><span>C. the total tax revenue would be $200.</span><span id="p7-b-c"></span></div>
+          <div class="mc-exp" id="p7-e-c"><strong style="color:#dc2626;">✘ 錯誤｜</strong>$2 × 90 units = <strong>$180</strong>。（⚠️ 誤用稅前舊成交量 100 件）</div>
+        </div>
+        <div class="mc-option" id="p7-opt-d">
+          <div class="en-term" style="font-size: 16px; display:flex; justify-content:space-between;"><span>D. buyers’ total expenditure on Good X would decrease by $40.</span><span id="p7-b-d"></span></div>
+          <div class="mc-exp" id="p7-e-d"><strong style="color:#dc2626;">✘ 錯誤｜</strong>TE 由 $1,000 跌至 $990 → <strong>減少 $10</strong>，並非 $40。</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- BOTTOM FLOATING LIQUID GLASS DOCK -->
+  <footer class="glass-dock">
+    <div class="tool-group">
+      <button class="tool-btn active" id="tool-cursor">👆 點按</button>
+      <button class="tool-btn" id="tool-pen" title="按住終點 2 秒自動變直線">✏️ 畫筆</button>
+      <button class="tool-btn" id="tool-hl" title="按住終點 2 秒自動變直線">🖍️ 螢光筆</button>
+      <button class="tool-btn" id="tool-eraser">🧽 橡皮擦</button>
+      <button class="color-dot active" data-color="#ef4444" style="background:#ef4444;"></button>
+      <button class="color-dot" data-color="#2563eb" style="background:#2563eb;"></button>
+      <button class="color-dot" data-color="#16a34a" style="background:#16a34a;"></button>
+      <button class="color-dot" data-color="#f59e0b" style="background:#f59e0b;"></button>
+      <button class="tool-btn" id="tool-undo">↩️</button>
+      <button class="tool-btn" id="tool-clear">🗑️</button>
+    </div>
+
+    <div class="step-dots" id="step-indicator">
+      <span id="step-text">0 / 2</span>
+      <div id="step-dots" style="display:flex; gap:5px;"></div>
+    </div>
+
+    <div class="tool-group">
+      <button class="ctrl-btn btn-prev" id="btn-prev">◀ 上一步</button>
+      <button class="ctrl-btn btn-reveal" id="btn-reveal">✨ 揭曉</button>
+      <button class="ctrl-btn btn-next" id="btn-next">下一頁 ▶</button>
+    </div>
+  </footer>
+</div>
+
+<!-- PROMPT EDITOR MODAL -->
+<div class="modal-mask" id="prompt-modal">
+  <div class="modal-glass">
+    <div class="modal-head">
+      <span>✏️ 編輯老師提示（自動儲存於本機）</span>
+      <button class="glass-btn" data-close="prompt-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13.5px; color:#475569;" id="edit-step-info">正在編輯</div>
+      <label style="font-weight:700; font-size:14px;">標籤文字
+        <input type="text" id="inp-edit-badge" style="width:100%; padding:8px; margin-top:4px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:15px;">
+      </label>
+      <label style="font-weight:700; font-size:14px;">主要提問 / 講解提示
+        <textarea id="inp-edit-main" rows="3" style="width:100%; padding:8px; margin-top:4px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:15px; font-family:inherit;"></textarea>
+      </label>
+      <label style="font-weight:700; font-size:14px;">補充引導提示
+        <textarea id="inp-edit-sub" rows="2" style="width:100%; padding:8px; margin-top:4px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:15px; font-family:inherit;"></textarea>
+      </label>
+      <div style="display:flex; justify-content:space-between; margin-top:6px;">
+        <button id="btn-reset-prompts" class="glass-btn" style="color:#dc2626;">重設全部為預設值</button>
+        <button id="btn-save-prompt" class="glass-btn accent" style="padding:8px 20px;">儲存提示</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOTTERY MODAL -->
+<div class="modal-mask" id="lottery-modal">
+  <div class="modal-glass">
+    <div class="modal-head">
+      <span>🎲 課堂不重複抽籤</span>
+      <button class="glass-btn" data-close="lottery-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center; background:rgba(255,255,255,0.55); border-radius:16px; padding:14px;">
+        <div style="font-size:14px; font-weight:800;" id="lottery-stat">本輪剩餘：30 / 30 人</div>
+        <div><div class="lottery-num" id="lottery-display">準備抽籤</div></div>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button id="btn-draw-now" class="glass-btn accent" style="padding:10px 22px; font-size:16px;">🎲 抽出下一位</button>
+          <button id="btn-reset-round" class="glass-btn" style="padding:10px 16px; font-size:14.5px;">🔄 重來一輪（保留名單）</button>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div style="background:rgba(255,255,255,0.5); padding:10px; border-radius:14px;">
+          <div style="font-weight:800; font-size:13.5px; margin-bottom:6px;">📋 學號／姓名名單</div>
+          <div style="display:flex; gap:4px; align-items:center; margin-bottom:6px; font-size:13px;">
+            <span>1 至</span>
+            <input type="number" id="inp-max-id" value="30" min="1" max="999" style="width:52px; padding:3px; border:1px solid #94a3b8; border-radius:6px;">
+            <button id="btn-gen-ids" class="glass-btn" style="padding:3px 9px;">產生</button>
+          </div>
+          <textarea id="txt-roster" rows="4" style="width:100%; border:1px solid #94a3b8; border-radius:8px; padding:6px; font-size:13.5px;"></textarea>
+          <button id="btn-save-roster" class="glass-btn accent" style="margin-top:4px;">套用名單</button>
+        </div>
+        <div style="background:rgba(255,255,255,0.5); padding:10px; border-radius:14px;">
+          <div style="font-weight:800; font-size:13.5px; margin-bottom:6px;">✅ 本輪已抽紀錄</div>
+          <div id="drawn-list" style="display:flex; flex-wrap:wrap; gap:5px; max-height:110px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const PROMPT_STORE_KEY = "dse_econ_71_glass_prompts_v1";
+  const ROSTER_STORE_KEY = "dse_econ_71_roster_v1";
+
+  const PAGES = [
+    {
+      locator: "Part A",
+      maxSteps: 2,
+      steps: [
+        { badge: "老師提問", badgeClass: "role-ask", main: "政府收『從量銷售稅 (unit sales tax)』，Target 嗰格填咩？", sub: "提示：係向買家定賣家／生產者 (producers) 收稅？" },
+        { badge: "揭曉概念", badgeClass: "role-done", main: "Target 填 Producers (sellers)！再睇 Prediction：每件收 $2 稅，市價係咪一定加足 $2？", sub: "叫同學舉手估下，再按「揭曉」記低猜測。" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "即刻翻去工作紙 Part B，用數字同畫圖驗證係咪加足 $2！", sub: "按「下一頁 ▶」進入稅前例子。" }
+      ],
+      render(step) {
+        const b = document.getElementById("p0-blank-target");
+        b.classList.toggle("revealed", step >= 1);
+        b.classList.toggle("target-now", step === 0);
+        document.getElementById("p0-item-target").classList.toggle("active-item", step === 0);
+        const n = document.getElementById("p0-pred-note");
+        n.classList.toggle("shown-step", step >= 2);
+        n.classList.toggle("hidden-step", step < 2);
+      }
+    },
+    {
+      locator: "Part B (1)",
+      maxSteps: 4,
+      steps: [
+        { badge: "老師提問", badgeClass: "role-ask", main: "先睇左邊供需表：一齊喺右邊座標軸點出 Demand curve (D)！", sub: "準備好就按「揭曉」畫出 D 線。" },
+        { badge: "同步畫圖", badgeClass: "role-demo", main: "D 線畫好啦！跟住睇 Qs，Supply curve (S0) 點畫？", sub: "等學生標點連線，再按「揭曉」畫出 S0。" },
+        { badge: "老師提問", badgeClass: "role-ask", main: "兩條線相交喺邊一點？稅前均衡價格同成交量係幾多？", sub: "引導學生指出 P = $3, Q = 30，再按「揭曉」。" },
+        { badge: "讀圖計數", badgeClass: "role-try", main: "Total revenue = total expenditure 點計？邊兩個數相乘？", sub: "讓學生講出 $3 × 30 = $90，再按「揭曉」顯示面積！" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "稅前均衡完成：P = $3, Q = 30, TR = TE = $90！", sub: "按「下一頁 ▶」睇徵收 $2 稅之後嘅變化。" }
+      ],
+      render(step) {
+        document.getElementById("p1-demand-group").style.display = step >= 1 ? "block" : "none";
+        document.getElementById("p1-supply-group").style.display = step >= 2 ? "block" : "none";
+        document.getElementById("p1-eq-group").style.display = step >= 3 ? "block" : "none";
+        document.getElementById("p1-row-3").classList.toggle("row-eq-old", step >= 3);
+        ["p1-ans-p", "p1-ans-q"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 3);
+          el.classList.toggle("target-now", step === 2);
+        });
+        document.getElementById("p1-item-p").classList.toggle("active-item", step === 2);
+        document.getElementById("p1-item-q").classList.toggle("active-item", step === 2);
+
+        const showTR = step >= 4;
+        document.getElementById("p1-tr-rect").style.display = showTR ? "block" : "none";
+        document.getElementById("p1-tr-label").style.display = showTR ? "block" : "none";
+        ["p1-ans-trp", "p1-ans-trq", "p1-ans-tr"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", showTR);
+          el.classList.toggle("target-now", step === 3);
+        });
+        document.getElementById("p1-item-tr").classList.toggle("active-item", step === 3);
+      }
+    },
+    {
+      locator: "Part B (2) Table",
+      maxSteps: 4,
+      steps: [
+        { badge: "老師提問", badgeClass: "role-ask", main: "每件收 $2 稅：賣家生產意欲 increase 定 decrease？因為實收價錢點變？", sub: "先圈出動詞並填原因，再按「揭曉」。" },
+        { badge: "老師提問", badgeClass: "role-ask", main: "市價 $1 或 $2 時，交完 $2 稅仲有冇錢賺？頭兩格填咩？", sub: "引導學生答唔會生產（填「—」）。" },
+        { badge: "老師示範", badgeClass: "role-demo", main: "老師示範 P = $3：以前收 $1 供應 10 件；加 $2 稅要賣 $3 先肯供應 10 件！", sub: "按「揭曉」填入 10。" },
+        { badge: "輪到你試！", badgeClass: "role-try", main: "自己試填 P = $4 同 P = $5 嗰兩格！", sub: "俾 15 秒學生落筆，再按「揭曉」核對 20 同 30！" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "新均衡出現：喺 P = $4 時，Qd (20) = New Qs (20)！", sub: "按「下一頁 ▶」將新供應線畫上圖。" }
+      ],
+      render(step) {
+        document.getElementById("p2-dec").classList.toggle("circled", step >= 1);
+        const r = document.getElementById("p2-ans-reason");
+        r.classList.toggle("revealed", step >= 1);
+        r.classList.toggle("target-now", step === 0);
+
+        ["p2-c1", "p2-c2"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 2);
+          el.classList.toggle("target-now", step === 1);
+        });
+        document.getElementById("p2-r1").classList.toggle("row-highlight", step === 1);
+        document.getElementById("p2-r2").classList.toggle("row-highlight", step === 1);
+
+        const c3 = document.getElementById("p2-c3");
+        c3.classList.toggle("revealed", step >= 3);
+        c3.classList.toggle("target-now", step === 2);
+        document.getElementById("p2-r3").classList.toggle("row-highlight", step === 2);
+
+        ["p2-c4", "p2-c5"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 4);
+          el.classList.toggle("target-now", step === 3);
+        });
+        document.getElementById("p2-r4").classList.toggle("row-highlight", step === 3);
+        document.getElementById("p2-r5").classList.toggle("row-highlight", step === 3);
+        document.getElementById("p2-r4").classList.toggle("row-eq-new", step >= 4);
+
+        const eq = document.getElementById("p2-eq-callout");
+        eq.classList.toggle("shown-step", step >= 4);
+        eq.classList.toggle("hidden-step", step < 4);
+      }
+    },
+    {
+      locator: "Part B (2) Diagram",
+      maxSteps: 3,
+      steps: [
+        { badge: "同步畫圖", badgeClass: "role-demo", main: "喺圖上標出三個新點：(10, $3)、(20, $4)、(30, $5)！", sub: "每點都由原本 S0 垂直向上升 $2。" },
+        { badge: "老師提問", badgeClass: "role-ask", main: "連成新供應線 S1！供應線向邊個方向移動？第一格填咩？", sub: "引導答 upwards (by $2) / leftwards。" },
+        { badge: "老師提問", badgeClass: "role-ask", main: "S1 同 D 相交喺 E1！新均衡價格同新成交量係幾多？", sub: "按「揭曉」核對 $4 同 20 units！" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "破案！加 $2 稅，市價只由 $3 升到 $4（升 $1），並無加足 $2！", sub: "按「下一頁 ▶」讀圖計銀碼。" }
+      ],
+      render(step) {
+        document.getElementById("p3-pts-group").style.display = step >= 1 ? "block" : "none";
+        document.getElementById("p3-s1-group").style.display = step >= 2 ? "block" : "none";
+        document.getElementById("p3-eq1-group").style.display = step >= 3 ? "block" : "none";
+
+        const sh = document.getElementById("p3-ans-shift");
+        sh.classList.toggle("revealed", step >= 2);
+        sh.classList.toggle("target-now", step <= 1);
+        document.getElementById("p3-item-shift").classList.toggle("active-item", step <= 1);
+
+        ["p3-ans-p", "p3-ans-q"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 3);
+          el.classList.toggle("target-now", step === 2);
+        });
+        document.getElementById("p3-item-p").classList.toggle("active-item", step === 2);
+        document.getElementById("p3-item-q").classList.toggle("active-item", step === 2);
+
+        const pv = document.getElementById("p3-pred-verify");
+        pv.classList.toggle("shown-step", step >= 3);
+        pv.classList.toggle("hidden-step", step < 3);
+      }
+    },
+    {
+      locator: "Part B (2) Blanks 4–8",
+      maxSteps: 4,
+      steps: [
+        { badge: "讀圖指認", badgeClass: "role-ask", main: "望住新交點 E1：買家俾幾錢？賣家連稅收幾錢？", sub: "按「揭曉」填頭兩格（$4）。" },
+        { badge: "讀圖計數", badgeClass: "role-try", main: "買家總開支 (TE) = 賣家連稅總收入係幾多？變幅視乎咩彈性？", sub: "按「揭曉」顯示 $4 × 20 = $80 同 price elasticity of demand。" },
+        { badge: "關鍵轉折", badgeClass: "role-ask", main: "賣家交完 $2 稅後，真正落袋 (excluding tax) 剩幾多？", sub: "由 E1 ($4) 垂直向下跌 $2 去返 S0 上面嘅 G 點 ($2)！" },
+        { badge: "讀圖計數", badgeClass: "role-try", main: "賣家稅後實收總收入 (TR excluding tax) 係幾多？必定點變？", sub: "按「揭曉」核對 $2 × 20 = $40（MUST decrease）。" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "分清楚買家俾 $4（連稅），賣家實收 $2（除稅）！", sub: "按「下一頁 ▶」計雙方稅項負擔。" }
+      ],
+      render(step) {
+        ["p4-ans-1", "p4-ans-2"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 1);
+          el.classList.toggle("target-now", step === 0);
+        });
+        document.getElementById("p4-item-1").classList.toggle("active-item", step === 0);
+        document.getElementById("p4-item-2").classList.toggle("active-item", step === 0);
+
+        document.getElementById("p4-area-te").style.display = step === 2 ? "block" : "none";
+        document.getElementById("p4-lbl-te").style.display = step === 2 ? "block" : "none";
+        ["p4-ans-3", "p4-ans-3b"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 2);
+          el.classList.toggle("target-now", step === 1);
+        });
+        document.getElementById("p4-item-3").classList.toggle("active-item", step === 1);
+
+        document.getElementById("p4-net-group").style.display = step >= 3 ? "block" : "none";
+        const a4 = document.getElementById("p4-ans-4");
+        a4.classList.toggle("revealed-green", step >= 3);
+        a4.classList.toggle("revealed", step >= 3);
+        a4.classList.toggle("target-now", step === 2);
+        document.getElementById("p4-item-4").classList.toggle("active-item", step === 2);
+
+        document.getElementById("p4-area-trnet").style.display = step >= 4 ? "block" : "none";
+        document.getElementById("p4-lbl-trnet").style.display = step >= 4 ? "block" : "none";
+        ["p4-ans-5", "p4-ans-5b"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed", step >= 4);
+          el.classList.toggle("target-now", step === 3);
+        });
+        document.getElementById("p4-item-5").classList.toggle("active-item", step === 3);
+      }
+    },
+    {
+      locator: "Part B (2) Bottom",
+      maxSteps: 3,
+      steps: [
+        { badge: "老師示範", badgeClass: "role-demo", main: "老師示範 Consumers' tax burden：買家由 $3 升到 $4（貴 $1），乘 20 件係幾多？", sub: "按「揭曉」顯示 ($4 − $3) × 20 = $20 同橙色面積。" },
+        { badge: "輪到你試！", badgeClass: "role-try", main: "輪到你試計 Producers' tax burden！賣家實收由 $3 跌到 $2，乘 20 件呢？", sub: "按「揭曉」核對 ($3 − $2) × 20 = $20 同藍色面積。" },
+        { badge: "輪到你試！", badgeClass: "role-try", main: "買家承擔 $20 + 賣家承擔 $20 = Government tax revenue 幾多？", sub: "按「揭曉」顯示 $20 + $20 = $40。" },
+        { badge: "本頁完成", badgeClass: "role-done", main: "Part B 計算全部完成！買賣雙方各自承擔 $20 稅負。", sub: "按「下一頁 ▶」進入 Part C 總結。" }
+      ],
+      render(step) {
+        document.getElementById("p5-cb-group").style.display = step >= 1 ? "block" : "none";
+        const cb = document.getElementById("p5-ans-cb");
+        cb.classList.toggle("revealed", step >= 1);
+        cb.classList.toggle("target-now", step === 0);
+        document.getElementById("p5-item-cb").classList.toggle("active-item", step === 0);
+
+        document.getElementById("p5-pb-group").style.display = step >= 2 ? "block" : "none";
+        const pb = document.getElementById("p5-ans-pb");
+        pb.classList.toggle("revealed-blue", step >= 2);
+        pb.classList.toggle("revealed", step >= 2);
+        pb.classList.toggle("target-now", step === 1);
+        document.getElementById("p5-item-pb").classList.toggle("active-item", step === 1);
+
+        document.getElementById("p5-gov-group").style.display = step >= 3 ? "block" : "none";
+        const gov = document.getElementById("p5-ans-gov");
+        gov.classList.toggle("revealed", step >= 3);
+        gov.classList.toggle("target-now", step === 2);
+        document.getElementById("p5-item-gov").classList.toggle("active-item", step === 2);
+      }
+    },
+    {
+      locator: "Part C",
+      maxSteps: 3,
+      steps: [
+        { badge: "課堂總結", badgeClass: "role-ask", main: "核對第 1、2 點：收 $x 稅，市價係咪一定升 $x？Q 同 P 點變？", sub: "按「揭曉」顯示數字對照。" },
+        { badge: "課堂總結", badgeClass: "role-ask", main: "核對第 3、4 點：買家總開支視乎咩因素？賣家實收價格同收入又點變？", sub: "按「揭曉」強調賣家實收 MUST decrease！" },
+        { badge: "下堂預告", badgeClass: "role-demo", main: "望一望 Challenging Questions：邊個決定稅負比例？", sub: "按「揭曉」顯示下堂預告提示。" },
+        { badge: "核心課完成", badgeClass: "role-done", main: "核心工作紙全部完成！按「下一頁 ▶」挑戰 2017 DSE MC。", sub: "2017 DSE Paper 1 Q16" }
+      ],
+      render(step) {
+        ["p6-b1", "p6-b2"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed-blue", step >= 1);
+          el.classList.toggle("revealed", step >= 1);
+          el.classList.toggle("target-now", step === 0);
+        });
+        document.getElementById("p6-c1").classList.toggle("active-item", step === 0);
+        document.getElementById("p6-c2").classList.toggle("active-item", step === 0);
+
+        ["p6-b3", "p6-b4"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.toggle("revealed-blue", step >= 2);
+          el.classList.toggle("revealed", step >= 2);
+          el.classList.toggle("target-now", step === 1);
+        });
+        document.getElementById("p6-c3").classList.toggle("active-item", step === 1);
+        document.getElementById("p6-c4").classList.toggle("active-item", step === 1);
+
+        const h = document.getElementById("p6-chal-hint");
+        h.classList.toggle("shown-step", step >= 3);
+        h.classList.toggle("hidden-step", step < 3);
+      }
+    },
+    {
+      locator: "Part D — DSE MC",
+      maxSteps: 5,
+      steps: [
+        { badge: "DSE 實戰", badgeClass: "role-ask", main: "加 $2 稅後，新均衡價格同新成交量係幾多？", sub: "按「揭曉」搵出 P = $11, Q = 90！" },
+        { badge: "拆解 A", badgeClass: "role-try", main: "選項 A：賣家淨收入係咪 $990？", sub: "按「揭曉」檢查算式同陷阱。" },
+        { badge: "拆解 B", badgeClass: "role-try", main: "選項 B：賣家稅項負擔係咪 $90？", sub: "按「揭曉」驗證 ($10 − $9) × 90！" },
+        { badge: "拆解 C", badgeClass: "role-try", main: "選項 C：政府總稅收點解唔係 $200？", sub: "按「揭曉」睇錯因。" },
+        { badge: "拆解 D", badgeClass: "role-try", main: "選項 D：買家總開支到底減少幾多？", sub: "按「揭曉」比較新舊總開支。" },
+        { badge: "全課完成", badgeClass: "role-done", main: "2017 DSE Q16 答案係 B！全課圓滿結束 👏", sub: "" }
+      ],
+      render(step) {
+        document.getElementById("p7-new-row").style.display = step >= 1 ? "table-row" : "none";
+        const sum = document.getElementById("p7-summary");
+        sum.classList.toggle("shown-step", step >= 1);
+        sum.classList.toggle("hidden-step", step < 1);
+        document.querySelectorAll(".dse-old").forEach(td => td.style.background = step >= 1 ? "rgba(204,251,241,0.85)" : "");
+        document.querySelectorAll(".dse-new").forEach(td => td.style.background = step >= 1 ? "rgba(255,228,230,0.85)" : "");
+
+        const map = [
+          { opt: "p7-opt-a", b: "p7-b-a", e: "p7-e-a", activeAt: 1, showAt: 2, ok: false },
+          { opt: "p7-opt-b", b: "p7-b-b", e: "p7-e-b", activeAt: 2, showAt: 3, ok: true },
+          { opt: "p7-opt-c", b: "p7-b-c", e: "p7-e-c", activeAt: 3, showAt: 4, ok: false },
+          { opt: "p7-opt-d", b: "p7-b-d", e: "p7-e-d", activeAt: 4, showAt: 5, ok: false }
+        ];
+        map.forEach(item => {
+          const card = document.getElementById(item.opt);
+          card.classList.toggle("opt-active", step === item.activeAt);
+          card.classList.toggle(item.ok ? "opt-correct" : "opt-wrong", step >= item.showAt);
+          const badge = document.getElementById(item.b);
+          badge.textContent = step >= item.showAt ? (item.ok ? "✔ 正確答案" : "✘ 錯誤") : "";
+          badge.style.color = item.ok ? "#059669" : "#dc2626";
+          document.getElementById(item.e).classList.toggle("shown", step >= item.showAt);
+        });
+      }
+    }
+  ];
+
+  let customPrompts = {};
+  try { const raw = localStorage.getItem(PROMPT_STORE_KEY); if (raw) customPrompts = JSON.parse(raw); } catch (e) {}
+  function getStepPrompt(pIdx, sIdx) {
+    const k = `${pIdx}_${sIdx}`;
+    const base = PAGES[pIdx].steps[sIdx];
+    return customPrompts[k] ? { ...base, ...customPrompts[k] } : base;
+  }
+
+  let curPage = 0;
+  const pageSteps = PAGES.map(() => 0);
+  const pageStrokes = PAGES.map(() => []);
+
+  const navPills = document.querySelectorAll(".nav-pill");
+  const pageViews = document.querySelectorAll(".page-view");
+  const promptBadge = document.getElementById("prompt-badge");
+  const promptMain = document.getElementById("prompt-main");
+  const promptSub = document.getElementById("prompt-sub");
+  const wsLocator = document.getElementById("ws-locator");
+  const stepText = document.getElementById("step-text");
+  const stepDots = document.getElementById("step-dots");
+  const btnPrev = document.getElementById("btn-prev");
+  const btnReveal = document.getElementById("btn-reveal");
+  const btnNext = document.getElementById("btn-next");
+
+  function updateUI() {
+    const p = PAGES[curPage];
+    const st = pageSteps[curPage];
+    navPills.forEach((pill, i) => pill.classList.toggle("active", i === curPage));
+    pageViews.forEach((view, i) => view.classList.toggle("active", i === curPage));
+
+    const pInfo = getStepPrompt(curPage, st);
+    promptBadge.textContent = pInfo.badge;
+    promptBadge.className = `role-chip ${pInfo.badgeClass}`;
+    promptMain.textContent = pInfo.main;
+    promptSub.textContent = pInfo.sub;
+    wsLocator.innerHTML = `工作紙位置：<span>${p.locator}</span>`;
+
+    p.render(st);
+
+    stepText.textContent = `步驟 ${st} / ${p.maxSteps}`;
+    let dots = "";
+    for (let i = 1; i <= p.maxSteps; i++) {
+      dots += `<span class="s-dot ${i <= st ? "done" : (i === st + 1 ? "cur" : "")}"></span>`;
+    }
+    stepDots.innerHTML = dots;
+
+    const done = st >= p.maxSteps;
+    btnPrev.disabled = (curPage === 0 && st === 0);
+    btnReveal.disabled = done;
+    btnReveal.textContent = done ? "✔ 本頁完成" : "✨ 揭曉";
+    btnReveal.classList.toggle("done", done);
+    btnNext.disabled = (curPage === PAGES.length - 1);
+
+    redrawCanvas();
+  }
+
+  navPills.forEach(pill => pill.addEventListener("click", () => { curPage = Number(pill.dataset.page); updateUI(); }));
+  btnReveal.addEventListener("click", () => { if (pageSteps[curPage] < PAGES[curPage].maxSteps) { pageSteps[curPage]++; updateUI(); } });
+  btnPrev.addEventListener("click", () => {
+    if (pageSteps[curPage] > 0) { pageSteps[curPage]--; updateUI(); }
+    else if (curPage > 0) { curPage--; updateUI(); }
+  });
+  btnNext.addEventListener("click", () => { if (curPage < PAGES.length - 1) { curPage++; updateUI(); } });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.target && (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT")) return;
+    if (e.key === "ArrowRight" || e.key === " ") {
+      e.preventDefault();
+      if (pageSteps[curPage] < PAGES[curPage].maxSteps) { pageSteps[curPage]++; updateUI(); }
+      else if (curPage < PAGES.length - 1) { curPage++; updateUI(); }
+    } else if (e.key === "ArrowLeft") { btnPrev.click(); }
+  });
+
+  // Single-Screen Prompt Toggle
+  const btnTogglePrompt = document.getElementById("btn-toggle-prompt");
+  btnTogglePrompt.addEventListener("click", () => {
+    const hidden = document.body.classList.toggle("hide-prompt");
+    btnTogglePrompt.textContent = hidden ? "👁️ 顯示提示" : "👁️ 隱藏提示";
+    setTimeout(resizeCanvas, 30);
+  });
+
+  // Prompt Editor
+  const promptModal = document.getElementById("prompt-modal");
+  document.getElementById("btn-edit-prompt").addEventListener("click", () => {
+    const st = pageSteps[curPage];
+    const info = getStepPrompt(curPage, st);
+    document.getElementById("edit-step-info").textContent = `正在編輯：第 ${curPage + 1} 頁 (${PAGES[curPage].locator}) — 步驟 ${st}`;
+    document.getElementById("inp-edit-badge").value = info.badge;
+    document.getElementById("inp-edit-main").value = info.main;
+    document.getElementById("inp-edit-sub").value = info.sub;
+    promptModal.classList.add("open");
+  });
+  document.getElementById("btn-save-prompt").addEventListener("click", () => {
+    const k = `${curPage}_${pageSteps[curPage]}`;
+    customPrompts[k] = {
+      badge: document.getElementById("inp-edit-badge").value.trim() || "老師提示",
+      main: document.getElementById("inp-edit-main").value.trim(),
+      sub: document.getElementById("inp-edit-sub").value.trim()
+    };
+    try { localStorage.setItem(PROMPT_STORE_KEY, JSON.stringify(customPrompts)); } catch (e) {}
+    promptModal.classList.remove("open");
+    updateUI();
+  });
+  document.getElementById("btn-reset-prompts").addEventListener("click", () => {
+    customPrompts = {};
+    try { localStorage.removeItem(PROMPT_STORE_KEY); } catch (e) {}
+    promptModal.classList.remove("open");
+    updateUI();
+  });
+
+  // 55-Min Timer
+  let totalSec = 55 * 60, running = false, tInt = null;
+  const timerVal = document.getElementById("timer-val");
+  function drawTimer() {
+    timerVal.textContent = `${String(Math.floor(totalSec / 60)).padStart(2, "0")}:${String(totalSec % 60).padStart(2, "0")}`;
+  }
+  document.getElementById("timer-box").addEventListener("click", (e) => {
+    if (e.target.id === "btn-timer-set") return;
+    if (running) { clearInterval(tInt); running = false; }
+    else { running = true; tInt = setInterval(() => { if (totalSec > 0) { totalSec--; drawTimer(); } else { clearInterval(tInt); running = false; } }, 1000); }
+  });
+  document.getElementById("btn-timer-set").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const mins = prompt("請輸入課堂倒數分鐘數（例如 35、40、55、70）：", String(Math.round(totalSec / 60)));
+    if (mins && !isNaN(Number(mins)) && Number(mins) > 0) {
+      clearInterval(tInt); running = false;
+      totalSec = Math.round(Number(mins) * 60);
+      drawTimer();
+    }
+  });
+
+  // Whiteboard Canvas + Eraser + 2s Straight Line
+  const stage = document.getElementById("stage-wrap");
+  const canvas = document.getElementById("draw-canvas");
+  const ctx = canvas.getContext("2d");
+  const drawToast = document.getElementById("draw-toast");
+  let tool = "cursor", color = "#ef4444", drawing = false, stroke = null, holdTimer = null, anchor = null, toastT = null;
+
+  function showToast(msg) {
+    drawToast.textContent = msg; drawToast.classList.add("visible");
+    clearTimeout(toastT); toastT = setTimeout(() => drawToast.classList.remove("visible"), 1600);
+  }
+  function clearHold() { clearTimeout(holdTimer); holdTimer = null; anchor = null; }
+  function startHold(px, py) {
+    clearHold(); anchor = { x: px, y: py };
+    holdTimer = setTimeout(() => {
+      if (!drawing || !stroke || tool === "eraser" || stroke.points.length < 2) return;
+      stroke.points = [stroke.points[0], stroke.points[stroke.points.length - 1]];
+      stroke.straight = true; redrawCanvas();
+      showToast("📏 已轉換為直線（放手前可繼續微調）");
+    }, 2000);
+  }
+  function resizeCanvas() {
+    const r = stage.getBoundingClientRect(); const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.floor(r.width * dpr)); canvas.height = Math.max(1, Math.floor(r.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); redrawCanvas();
+  }
+  function redrawCanvas() {
+    const r = stage.getBoundingClientRect(); ctx.clearRect(0, 0, r.width, r.height);
+    for (const st of pageStrokes[curPage]) {
+      if (!st.points.length) continue;
+      ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+      if (st.tool === "eraser") { ctx.globalCompositeOperation = "destination-out"; ctx.lineWidth = 28; ctx.strokeStyle = "rgba(0,0,0,1)"; }
+      else if (st.tool === "hl") { ctx.globalAlpha = 0.34; ctx.lineWidth = 20; ctx.strokeStyle = st.color; }
+      else { ctx.globalAlpha = 0.95; ctx.lineWidth = 3.5; ctx.strokeStyle = st.color; }
+      ctx.beginPath(); ctx.moveTo(st.points[0].x * r.width, st.points[0].y * r.height);
+      for (let i = 1; i < st.points.length; i++) ctx.lineTo(st.points[i].x * r.width, st.points[i].y * r.height);
+      if (st.points.length === 1) ctx.lineTo(st.points[0].x * r.width + 0.5, st.points[0].y * r.height + 0.5);
+      ctx.stroke(); ctx.restore();
+    }
+  }
+  function normPt(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / (r.width || 1), y: (e.clientY - r.top) / (r.height || 1) };
+  }
+  canvas.addEventListener("pointerdown", (e) => {
+    if (tool === "cursor") return;
+    e.preventDefault(); canvas.setPointerCapture(e.pointerId); drawing = true;
+    stroke = { tool, color, straight: false, points: [normPt(e)] };
+    pageStrokes[curPage].push(stroke); redrawCanvas();
+    if (tool === "pen" || tool === "hl") startHold(e.clientX, e.clientY);
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drawing || !stroke) return;
+    e.preventDefault(); const pt = normPt(e);
+    if (stroke.straight) { stroke.points[1] = pt; redrawCanvas(); return; }
+    stroke.points.push(pt); redrawCanvas();
+    if ((tool === "pen" || tool === "hl") && anchor && Math.hypot(e.clientX - anchor.x, e.clientY - anchor.y) > 6) startHold(e.clientX, e.clientY);
+  });
+  function stopDraw(e) {
+    clearHold(); if (!drawing) return; drawing = false; stroke = null;
+    if (e && canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+  }
+  canvas.addEventListener("pointerup", stopDraw);
+  canvas.addEventListener("pointercancel", stopDraw);
+
+  function setTool(t) {
+    tool = t;
+    ["cursor", "pen", "hl", "eraser"].forEach(k => document.getElementById(`tool-${k}`).classList.toggle("active", k === t));
+    canvas.classList.toggle("drawing-active", t === "pen" || t === "hl");
+    canvas.classList.toggle("eraser-active", t === "eraser");
+  }
+  ["cursor", "pen", "hl", "eraser"].forEach(k => document.getElementById(`tool-${k}`).addEventListener("click", () => setTool(k)));
+  document.querySelectorAll(".color-dot").forEach(sw => {
+    sw.addEventListener("click", () => {
+      color = sw.dataset.color;
+      document.querySelectorAll(".color-dot").forEach(x => x.classList.toggle("active", x === sw));
+      if (tool === "cursor" || tool === "eraser") setTool("pen");
+    });
+  });
+  document.getElementById("tool-undo").addEventListener("click", () => { pageStrokes[curPage].pop(); redrawCanvas(); });
+  document.getElementById("tool-clear").addEventListener("click", () => { pageStrokes[curPage].length = 0; redrawCanvas(); });
+
+  // Non-Repeating Lottery
+  let roster = Array.from({ length: 30 }, (_, i) => `${i + 1} 號`);
+  try { const sr = localStorage.getItem(ROSTER_STORE_KEY); if (sr) { const p = JSON.parse(sr); if (Array.isArray(p) && p.length) roster = p; } } catch (e) {}
+  let pool = [...roster], drawn = [], rolling = false;
+  const lotteryModal = document.getElementById("lottery-modal");
+  function renderLottery() {
+    document.getElementById("lottery-count").textContent = pool.length;
+    document.getElementById("lottery-stat").textContent = `本輪剩餘：${pool.length} / ${roster.length} 人（不重複）`;
+    document.getElementById("txt-roster").value = roster.join("\n");
+    document.getElementById("btn-draw-now").disabled = pool.length === 0 || rolling;
+    document.getElementById("drawn-list").innerHTML = drawn.length
+      ? drawn.map((n, i) => `<span class="chip ${i === drawn.length - 1 ? "latest" : ""}">${i + 1}. ${n}</span>`).join("")
+      : `<span style="font-size:12.5px; color:#64748b;">尚未抽出</span>`;
+  }
+  document.getElementById("btn-lottery").addEventListener("click", () => { renderLottery(); lotteryModal.classList.add("open"); });
+  document.getElementById("btn-gen-ids").addEventListener("click", () => {
+    const max = Math.max(1, parseInt(document.getElementById("inp-max-id").value, 10) || 30);
+    roster = Array.from({ length: max }, (_, i) => `${i + 1} 號`);
+    pool = [...roster]; drawn = [];
+    try { localStorage.setItem(ROSTER_STORE_KEY, JSON.stringify(roster)); } catch (e) {}
+    renderLottery();
+  });
+  document.getElementById("btn-save-roster").addEventListener("click", () => {
+    const list = document.getElementById("txt-roster").value.split(/[\n,，、]+/).map(s => s.trim()).filter(Boolean).map(s => /^\d+$/.test(s) ? `${s} 號` : s);
+    if (!list.length) return;
+    roster = list; pool = [...roster]; drawn = [];
+    try { localStorage.setItem(ROSTER_STORE_KEY, JSON.stringify(roster)); } catch (e) {}
+    renderLottery();
+  });
+  document.getElementById("btn-reset-round").addEventListener("click", () => {
+    if (rolling) return;
+    pool = [...roster]; drawn = [];
+    document.getElementById("lottery-display").textContent = "準備抽籤";
+    renderLottery();
+  });
+  document.getElementById("btn-draw-now").addEventListener("click", () => {
+    if (rolling || !pool.length) return;
+    rolling = true; renderLottery();
+    let t = 0;
+    const box = document.getElementById("lottery-display");
+    const iv = setInterval(() => {
+      box.textContent = pool[Math.floor(Math.random() * pool.length)];
+      if (++t >= 10) {
+        clearInterval(iv);
+        const idx = Math.floor(Math.random() * pool.length);
+        const win = pool.splice(idx, 1)[0];
+        drawn.push(win); rolling = false;
+        box.textContent = `🎯 ${win}`;
+        renderLottery();
+      }
+    }, 45);
+  });
+
+  document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.close).classList.remove("open")));
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+  updateUI();
+})();
+</script>
+</body>
+</html>
