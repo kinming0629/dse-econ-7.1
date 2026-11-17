@@ -1750,7 +1750,7 @@
   const canvas = document.getElementById("draw-canvas");
   const ctx = canvas.getContext("2d");
   const drawToast = document.getElementById("draw-toast");
-  let tool = "cursor", color = "#ef4444", drawing = false, stroke = null, holdTimer = null, anchor = null, toastT = null;
+  let tool = "cursor", toolColors = { pen: "#2563eb", hl: "#f59e0b" }, color = toolColors.pen, drawing = false, stroke = null, holdTimer = null, anchor = null, toastT = null;
   let laserStrokes = [], laserRaf = null;
   const LASER_LIFE = 1100;
 
@@ -1885,6 +1885,12 @@
   const wheelToggleBtn = document.getElementById("btn-wheel-toggle");
   const colorSubbar = document.getElementById("color-subbar");
 
+  function syncColorDots() {
+    if (!toolColors[tool]) return;
+    color = toolColors[tool];
+    document.querySelectorAll(".color-dot").forEach(x => x.classList.toggle("active", x.dataset.color === color));
+  }
+
   function setTool(t) {
     tool = t;
     const meta = TOOL_META[t] || TOOL_META.cursor;
@@ -1892,6 +1898,7 @@
     document.getElementById("cur-tool-label").textContent = meta.label;
     wheelToggleBtn.classList.toggle("has-tool", t !== "cursor");
     colorSubbar.classList.toggle("open", meta.hasColor);
+    if (meta.hasColor) syncColorDots();
     document.querySelectorAll(".wheel-item").forEach(btn => btn.classList.toggle("active", btn.dataset.tool === t));
     canvas.classList.toggle("drawing-active", t === "pen" || t === "hl" || t === "laser");
     canvas.classList.toggle("eraser-active", t === "eraser");
@@ -1920,6 +1927,7 @@
   document.querySelectorAll(".color-dot").forEach(sw => {
     sw.addEventListener("click", () => {
       color = sw.dataset.color;
+      if (toolColors[tool]) toolColors[tool] = color;
       document.querySelectorAll(".color-dot").forEach(x => x.classList.toggle("active", x === sw));
     });
   });
