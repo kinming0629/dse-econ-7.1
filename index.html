@@ -612,7 +612,8 @@
       <button class="nav-pill" data-page="4">5. B2 價格收入</button>
       <button class="nav-pill" data-page="5">6. B2 稅項負擔</button>
       <button class="nav-pill" data-page="6">7. C 總結思考</button>
-      <button class="nav-pill" data-page="7">8. D DSE MC</button>
+      <button class="nav-pill" data-page="7">8. D 2017 MC</button>
+      <button class="nav-pill" data-page="8">9. D 2015 MC</button>
     </nav>
     <div class="top-actions">
       <button class="glass-btn accent" id="btn-lottery">🎲 抽籤 (<span id="lottery-count">30</span>)</button>
@@ -828,7 +829,7 @@
           <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
             <div class="ws-item active-item" id="p3-item-shift">
               • <span class="en-term">The supply curve shifts</span><br>
-              <span class="blank-slot target-now" id="p3-ans-shift" style="min-width: 240px; margin-top: 6px;">upwards (by $2) / leftwards</span>
+              <span class="blank-slot target-now" id="p3-ans-shift" style="min-width: 240px; margin-top: 6px;">upwards (by $2)</span>
             </div>
             <div class="ws-item" id="p3-item-p">• <span class="en-term">New equilibrium price</span> = <span class="blank-slot" id="p3-ans-p" style="min-width: 75px;">$4</span></div>
             <div class="ws-item" id="p3-item-q">• <span class="en-term">New quantity transacted</span> = <span class="blank-slot" id="p3-ans-q" style="min-width: 95px;">20 units</span></div>
@@ -917,18 +918,9 @@
             </g>
             <g id="p5-cb-group" style="display:none;">
               <rect x="55" y="88" width="100" height="48" fill="rgba(245, 158, 11, 0.35)" stroke="#d97706" stroke-width="2.5"/>
-              <text x="105" y="110" text-anchor="middle" fill="#92400e" font-size="12" font-weight="800">Consumers' Burden</text>
-              <text x="105" y="126" text-anchor="middle" fill="#92400e" font-size="12" font-weight="800">($4−$3)×20 = $20</text>
             </g>
             <g id="p5-pb-group" style="display:none;">
               <rect x="55" y="136" width="100" height="48" fill="rgba(14, 165, 233, 0.32)" stroke="#0284c7" stroke-width="2.5"/>
-              <text x="105" y="158" text-anchor="middle" fill="#075985" font-size="12" font-weight="800">Producers' Burden</text>
-              <text x="105" y="174" text-anchor="middle" fill="#075985" font-size="12" font-weight="800">($3−$2)×20 = $20</text>
-            </g>
-            <g id="p5-gov-group" style="display:none;">
-              <path d="M 162 88 L 172 88 L 172 184 L 162 184" fill="none" stroke="#be123c" stroke-width="3"/>
-              <text x="178" y="132" font-size="13" font-weight="800" fill="#be123c">Gov Tax Rev</text>
-              <text x="178" y="148" font-size="13" font-weight="800" fill="#be123c">= $20 + $20 = $40</text>
             </g>
             <line x1="55" y1="20" x2="55" y2="280" stroke="#0f172a" stroke-width="2.5"/><line x1="55" y1="280" x2="345" y2="280" stroke="#0f172a" stroke-width="2.5"/>
             <text x="42" y="22" font-size="17" font-weight="800">P</text><text x="336" y="302" font-size="16" font-weight="800">Q/t</text><text x="40" y="298" font-size="15" font-weight="700">0</text>
@@ -945,6 +937,23 @@
             <line x1="55" y1="136" x2="205" y2="136" stroke="#64748b" stroke-width="1.8" stroke-dasharray="4,3"/>
             <line x1="55" y1="184" x2="155" y2="184" stroke="#059669" stroke-width="1.8" stroke-dasharray="4,3"/>
             <line x1="155" y1="88" x2="155" y2="280" stroke="#0f172a" stroke-width="1.8" stroke-dasharray="4,3"/>
+            <g id="p5-cb-lbl" style="display:none;">
+              <rect x="61" y="94" width="88" height="36" rx="6" fill="rgba(255,255,255,0.86)"/>
+              <text x="105" y="109" text-anchor="middle" fill="#92400e" font-size="11" font-weight="800">Consumers: $20</text>
+              <text x="105" y="123" text-anchor="middle" fill="#b45309" font-size="10.5" font-weight="700">($4−$3) × 20</text>
+            </g>
+            <g id="p5-pb-lbl" style="display:none;">
+              <rect x="61" y="142" width="88" height="36" rx="6" fill="rgba(255,255,255,0.86)"/>
+              <text x="105" y="157" text-anchor="middle" fill="#075985" font-size="11" font-weight="800">Producers: $20</text>
+              <text x="105" y="171" text-anchor="middle" fill="#0369a1" font-size="10.5" font-weight="700">($3−$2) × 20</text>
+            </g>
+            <g id="p5-gov-group" style="display:none;">
+              <path d="M 161 88 L 171 88 L 171 184 L 161 184" fill="none" stroke="#be123c" stroke-width="2.8"/>
+              <line x1="171" y1="136" x2="184" y2="136" stroke="#be123c" stroke-width="2" stroke-dasharray="3,2"/>
+              <rect x="184" y="114" width="134" height="44" rx="8" fill="rgba(255,255,255,0.94)" stroke="#be123c" stroke-width="1.8"/>
+              <text x="251" y="132" text-anchor="middle" font-size="12" font-weight="800" fill="#be123c">Gov Tax Revenue</text>
+              <text x="251" y="149" text-anchor="middle" font-size="12" font-weight="800" fill="#9f1239">= $20 + $20 = $40</text>
+            </g>
           </svg>
         </div>
       </div>
@@ -954,15 +963,12 @@
           📌 <span class="en-term">Government tax revenue = $2 × 20 units = $40</span>
         </div>
         <div class="ws-item active-item" id="p5-item-cb">
-          <div style="font-size: 13.5px; font-weight: 800; color: #b45309;">① 老師示範（買家加咗幾多價？）：</div>
           • <span class="en-term">Consumers’ tax burden</span> = <span class="blank-slot target-now" id="p5-ans-cb" style="min-width: 240px;">($4 − $3) × 20 units = $20</span>
         </div>
         <div class="ws-item" id="p5-item-pb">
-          <div style="font-size: 13.5px; font-weight: 800; color: #0369a1;">② 輪到你試（賣家實收少咗幾多？）：</div>
           • <span class="en-term">Producers’ tax burden</span> = <span class="blank-slot" id="p5-ans-pb" style="min-width: 240px;">($3 − $2) × 20 units = $20</span>
         </div>
         <div class="ws-item" id="p5-item-gov">
-          <div style="font-size: 13.5px; font-weight: 800; color: #be123c;">③ 兩者相加 = 政府總稅收：</div>
           • <span class="en-term">Government tax revenue</span> = <span class="blank-slot" id="p5-ans-gov" style="min-width: 240px;">$20 + $20 = $40</span>
         </div>
       </div>
@@ -1035,6 +1041,48 @@
         <div class="mc-option" id="p7-opt-d">
           <div class="en-term" style="font-size: 16px; display:flex; justify-content:space-between;"><span>D. buyers’ total expenditure on Good X would decrease by $40.</span><span id="p7-b-d"></span></div>
           <div class="mc-exp" id="p7-e-d"><strong style="color:#dc2626;">✘ 錯誤｜</strong>TE 由 $1,000 跌至 $990 → <strong>減少 $10</strong>，並非 $40。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 8: 2015 DSE Q16 -->
+    <div class="page-view" id="page-8">
+      <div class="glass-card" style="width: 47%; justify-content: space-between;">
+        <div>
+          <div class="card-title"><span class="en-term">2015 DSE Paper 1 Q16</span><span style="background:#0284c7; color:#fff; padding:2px 8px; border-radius:999px; font-size:12px;">進階挑戰</span></div>
+          <table class="ws-table" style="font-size: 15px; margin-top:6px;">
+            <thead><tr><th style="text-align:left; padding-left:10px;">Unit Price ($)</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th></tr></thead>
+            <tbody>
+              <tr><td style="text-align:left; padding-left:10px;">Qd (units)</td><td>16</td><td class="dse15-old">14</td><td>12</td><td>10</td><td>8</td></tr>
+              <tr><td style="text-align:left; padding-left:10px;">Qs (units)</td><td>14</td><td class="dse15-old">14</td><td>14</td><td>14</td><td>14</td></tr>
+              <tr id="p8-new-row" style="display:none;"><td style="text-align:left; padding-left:10px; color:#be123c;">New Qs</td><td>—</td><td style="color:#be123c;">—</td><td style="color:#be123c;">14</td><td style="color:#be123c;">14</td><td style="color:#be123c;">14</td></tr>
+            </tbody>
+          </table>
+          <p class="en-term" style="font-size: 16px; line-height: 1.45; margin-top: 10px;">
+            The government imposes a <strong>$2 per unit tax</strong> on the good. Which of the following statements about the good is correct?
+          </p>
+        </div>
+        <div id="p8-summary" class="cantonese-note hidden-step" style="border-left-color: #0284c7; font-size: 14.5px;">
+          💡 <strong>關鍵陷阱：</strong>Qs 永遠等於 <strong>14</strong>（完全無彈性 Es = 0）！原本最低接受價 = <strong>$4</strong>，加 $2 稅後最低接受價升至 <strong>$6</strong>；在 P = $5 時，Qd (14) = Qs (14)，<strong>市價維持 $5 不變！</strong>
+        </div>
+      </div>
+
+      <div class="glass-card" style="width: 53%; justify-content: space-evenly;">
+        <div class="mc-option" id="p8-opt-a">
+          <div class="en-term" style="font-size: 15.8px; display:flex; justify-content:space-between;"><span>A. Sellers’ revenue net of tax is $70</span><span id="p8-b-a"></span></div>
+          <div class="mc-exp" id="p8-e-a"><strong style="color:#dc2626;">✘ 錯誤｜</strong>實收 = ($5 − $2) × 14 = <strong>$42</strong>。（⚠️ $70 係未扣稅總收入 $5 × 14）</div>
+        </div>
+        <div class="mc-option" id="p8-opt-b">
+          <div class="en-term" style="font-size: 15.8px; display:flex; justify-content:space-between;"><span>B. The new market price is $6</span><span id="p8-b-b"></span></div>
+          <div class="mc-exp" id="p8-e-b"><strong style="color:#dc2626;">✘ 錯誤｜</strong>在 P = $5 時，Qd (14) = Qs (14) 仍達成均衡，<strong>新市價維持 $5</strong>（買家冇加價）。</div>
+        </div>
+        <div class="mc-option" id="p8-opt-c">
+          <div class="en-term" style="font-size: 15.8px; display:flex; justify-content:space-between;"><span>C. The total tax revenue is $28</span><span id="p8-b-c"></span></div>
+          <div class="mc-exp" id="p8-e-c"><strong style="color:#059669;">✔ 正確｜</strong>每件稅額 $2 × 新成交量 14 units = <strong>$28</strong>（全部由賣家承擔）。</div>
+        </div>
+        <div class="mc-option" id="p8-opt-d">
+          <div class="en-term" style="font-size: 15.8px; display:flex; justify-content:space-between;"><span>D. The above information is insufficient to determine the tax burden on sellers.</span><span id="p8-b-d"></span></div>
+          <div class="mc-exp" id="p8-e-d"><strong style="color:#dc2626;">✘ 錯誤｜</strong>資料充足：市價不變 ($5)，賣家實收由 $5 跌至 $3，賣家稅負 = <strong>$2 × 14 = $28</strong>。</div>
         </div>
       </div>
     </div>
@@ -1236,7 +1284,7 @@
       maxSteps: 3,
       steps: [
         { badge: "同步畫圖", badgeClass: "role-demo", main: "喺圖上標出三個新點：(10, $3)、(20, $4)、(30, $5)！", sub: "每點都由原本 S0 垂直向上升 $2。" },
-        { badge: "老師提問", badgeClass: "role-ask", main: "連成新供應線 S1！供應線向邊個方向移動？第一格填咩？", sub: "引導答 upwards (by $2) / leftwards。" },
+        { badge: "老師提問", badgeClass: "role-ask", main: "連成新供應線 S1！供應線向邊個方向移動？第一格填咩？", sub: "引導答 upwards (by $2)。" },
         { badge: "老師提問", badgeClass: "role-ask", main: "S1 同 D 相交喺 E1！新均衡價格同新成交量係幾多？", sub: "按「揭曉」核對 $4 同 20 units！" },
         { badge: "本頁完成", badgeClass: "role-done", main: "破案！加 $2 稅，市價只由 $3 升到 $4（升 $1），並無加足 $2！", sub: "按「下一頁 ▶」讀圖計銀碼。" }
       ],
@@ -1312,19 +1360,21 @@
       locator: "Part B (2) Bottom",
       maxSteps: 3,
       steps: [
-        { badge: "老師示範", badgeClass: "role-demo", main: "老師示範 Consumers' tax burden：買家由 $3 升到 $4（貴 $1），乘 20 件係幾多？", sub: "按「揭曉」顯示 ($4 − $3) × 20 = $20 同橙色面積。" },
-        { badge: "輪到你試！", badgeClass: "role-try", main: "輪到你試計 Producers' tax burden！賣家實收由 $3 跌到 $2，乘 20 件呢？", sub: "按「揭曉」核對 ($3 − $2) × 20 = $20 同藍色面積。" },
-        { badge: "輪到你試！", badgeClass: "role-try", main: "買家承擔 $20 + 賣家承擔 $20 = Government tax revenue 幾多？", sub: "按「揭曉」顯示 $20 + $20 = $40。" },
+        { badge: "計算稅負", badgeClass: "role-ask", main: "先計 Consumers' tax burden：買家由 $3 升到 $4（貴 $1），乘 20 件係幾多？", sub: "按「揭曉」顯示 ($4 − $3) × 20 = $20 同橙色面積。" },
+        { badge: "計算稅負", badgeClass: "role-ask", main: "再計 Producers' tax burden：賣家實收由 $3 跌到 $2，乘 20 件係幾多？", sub: "按「揭曉」核對 ($3 − $2) × 20 = $20 同藍色面積。" },
+        { badge: "計算稅負", badgeClass: "role-ask", main: "買家承擔 $20 + 賣家承擔 $20 = Government tax revenue 幾多？", sub: "按「揭曉」顯示 $20 + $20 = $40。" },
         { badge: "本頁完成", badgeClass: "role-done", main: "Part B 計算全部完成！買賣雙方各自承擔 $20 稅負。", sub: "按「下一頁 ▶」進入 Part C 總結。" }
       ],
       render(step) {
         document.getElementById("p5-cb-group").style.display = step >= 1 ? "block" : "none";
+        document.getElementById("p5-cb-lbl").style.display = step >= 1 ? "block" : "none";
         const cb = document.getElementById("p5-ans-cb");
         cb.classList.toggle("revealed", step >= 1);
         cb.classList.toggle("target-now", step === 0);
         document.getElementById("p5-item-cb").classList.toggle("active-item", step === 0);
 
         document.getElementById("p5-pb-group").style.display = step >= 2 ? "block" : "none";
+        document.getElementById("p5-pb-lbl").style.display = step >= 2 ? "block" : "none";
         const pb = document.getElementById("p5-ans-pb");
         pb.classList.toggle("revealed-blue", step >= 2);
         pb.classList.toggle("revealed", step >= 2);
@@ -1380,7 +1430,7 @@
         { badge: "拆解 B", badgeClass: "role-try", main: "選項 B：賣家稅項負擔係咪 $90？", sub: "按「揭曉」驗證 ($10 − $9) × 90！" },
         { badge: "拆解 C", badgeClass: "role-try", main: "選項 C：政府總稅收點解唔係 $200？", sub: "按「揭曉」睇錯因。" },
         { badge: "拆解 D", badgeClass: "role-try", main: "選項 D：買家總開支到底減少幾多？", sub: "按「揭曉」比較新舊總開支。" },
-        { badge: "全課完成", badgeClass: "role-done", main: "2017 DSE Q16 答案係 B！全課圓滿結束 👏", sub: "" }
+        { badge: "本題完成", badgeClass: "role-done", main: "2017 DSE Q16 答案係 B！按「下一頁 ▶」挑戰 2015 DSE Q16 陷阱題！", sub: "" }
       ],
       render(step) {
         document.getElementById("p7-new-row").style.display = step >= 1 ? "table-row" : "none";
@@ -1395,6 +1445,41 @@
           { opt: "p7-opt-b", b: "p7-b-b", e: "p7-e-b", activeAt: 2, showAt: 3, ok: true },
           { opt: "p7-opt-c", b: "p7-b-c", e: "p7-e-c", activeAt: 3, showAt: 4, ok: false },
           { opt: "p7-opt-d", b: "p7-b-d", e: "p7-e-d", activeAt: 4, showAt: 5, ok: false }
+        ];
+        map.forEach(item => {
+          const card = document.getElementById(item.opt);
+          card.classList.toggle("opt-active", step === item.activeAt);
+          card.classList.toggle(item.ok ? "opt-correct" : "opt-wrong", step >= item.showAt);
+          const badge = document.getElementById(item.b);
+          badge.textContent = step >= item.showAt ? (item.ok ? "✔ 正確答案" : "✘ 錯誤") : "";
+          badge.style.color = item.ok ? "#059669" : "#dc2626";
+          document.getElementById(item.e).classList.toggle("shown", step >= item.showAt);
+        });
+      }
+    },
+    {
+      locator: "Part D — 2015 DSE Q16",
+      maxSteps: 5,
+      steps: [
+        { badge: "進階 DSE", badgeClass: "role-ask", main: "留意 Qs 全部都係 14（垂直供應線）！加 $2 稅後，新均衡價格同成交量係幾多？", sub: "按「揭曉」睇下 P = $5 仲係咪均衡！" },
+        { badge: "拆解 A", badgeClass: "role-try", main: "選項 A：Sellers’ revenue net of tax 係咪 $70？", sub: "按「揭曉」檢查係咪未扣稅。" },
+        { badge: "拆解 B", badgeClass: "role-try", main: "選項 B：The new market price 係咪升到 $6？", sub: "按「揭曉」驗證需求量同供應量。" },
+        { badge: "拆解 C", badgeClass: "role-try", main: "選項 C：The total tax revenue 係咪 $28？", sub: "按「揭曉」核對 $2 × 14。" },
+        { badge: "拆解 D", badgeClass: "role-try", main: "選項 D：係咪唔夠資料計賣家稅項負擔？", sub: "按「揭曉」睇賣家實收變化。" },
+        { badge: "全課完成", badgeClass: "role-done", main: "2015 DSE Q16 答案係 C！（回應 Part C 思考題：當 Es = 0，市價不變且賣家承擔全部稅負 👏）", sub: "" }
+      ],
+      render(step) {
+        document.getElementById("p8-new-row").style.display = step >= 1 ? "table-row" : "none";
+        const sum = document.getElementById("p8-summary");
+        sum.classList.toggle("shown-step", step >= 1);
+        sum.classList.toggle("hidden-step", step < 1);
+        document.querySelectorAll(".dse15-old").forEach(td => td.style.background = step >= 1 ? "rgba(254,205,211,0.88)" : "");
+
+        const map = [
+          { opt: "p8-opt-a", b: "p8-b-a", e: "p8-e-a", activeAt: 1, showAt: 2, ok: false },
+          { opt: "p8-opt-b", b: "p8-b-b", e: "p8-e-b", activeAt: 2, showAt: 3, ok: false },
+          { opt: "p8-opt-c", b: "p8-b-c", e: "p8-e-c", activeAt: 3, showAt: 4, ok: true },
+          { opt: "p8-opt-d", b: "p8-b-d", e: "p8-e-d", activeAt: 4, showAt: 5, ok: false }
         ];
         map.forEach(item => {
           const card = document.getElementById(item.opt);
